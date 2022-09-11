@@ -112,7 +112,7 @@ class eCharts extends State<HomePage> {
 
   _modeSwitch(){
     if(current_mode == "Charting"){
-      current_mode = "Editing";
+      current_mode = "History";
       modeColor = Colors.redAccent;
     } else {
       current_mode = "Charting";
