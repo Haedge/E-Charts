@@ -15,7 +15,7 @@ import 'Delegates/DateDelegate.dart';
 import 'Delegates/PitchersDelegate.dart';
 import 'Delegates/OutingDelegate.dart';
 import 'Delegates/InfoBoxDelegate.dart';
-import 'Delegates/StrikeZoneDelegate';
+import 'Delegates/StrikeZoneDelegate.dart';
 import 'Baseball_Pieces/Pitch.dart';
 import 'Baseball_Pieces/paintPitch.dart';
 import 'HomePage.dart';
@@ -49,6 +49,8 @@ class eCharts extends State<HomePage> {
   double _sl_avg = 0; int _sl_min = 0; int _sl_max = 0;
   int _numHits = 0; int _numWalks = 0; int _numHBP = 0;
   int _numKs = 0; double _strikePercentage = 0;
+  Color? modeColor = Colors.blue[600];
+  String current_mode = "Charting";
   
   final GlobalKey<State<StatefulWidget>> _printKey = GlobalKey();
   final List<String> _Pitchers = [' ', 'Andrei Stoyanow', 'Bobby Fowler', 'Brody Plemmons', 'Cade McWilliams', 'Connor Stack', 'David Blackburn',
@@ -108,10 +110,26 @@ class eCharts extends State<HomePage> {
     setState(() {});
   }
 
-  void _createInstance(Player pitcher, List<Pitch> pitches, String mm, String dd, int game_n, String team){
+  _modeSwitch(){
+    if(current_mode == "Charting"){
+      current_mode = "Editing";
+      modeColor = Colors.redAccent;
+    } else {
+      current_mode = "Charting";
+      modeColor = Colors.blue;
+    }
+    print('test');
+    setState(() {});
+  }
+
+
+  _createInstance(Player pitcher, List<Pitch> pitches, String mm, String dd, int game_n, String team){
+    
     GameInstance game = GameInstance(pitches, pitcher, team, game_n, mm, dd);
     pitcher.addGame(pitcher, game);
   }
+
+
 
   _undoPitch(){
     _totalpitches.removeLast();
@@ -248,7 +266,6 @@ class eCharts extends State<HomePage> {
     String month = DateTime.now().month.toString();
     String day = DateTime.now().day.toString();
     String year = DateTime.now().year.toString();
-    
 
     return Scaffold(
       body: Center(
@@ -309,7 +326,7 @@ class eCharts extends State<HomePage> {
                                 ElevatedButton(
                                   child: Text('Confirm'),
                                   onPressed: () => {
-                                    //Add game method here
+                                    //_createInstance(_currentPitcher, pitches, mm, dd, game_n, team)
                                     Navigator.pop(context)
                                   },
                                 ),
@@ -336,7 +353,27 @@ class eCharts extends State<HomePage> {
                         );
                       }
                     ),
-                  }, child: Icon(Icons.undo))
+                  }, child: Icon(Icons.undo)),
+                  SizedBox(
+                    height: 40,
+                    child: ElevatedButton(onPressed: () => {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context){
+                          return AlertDialog(
+                            title: Text('Change Mode?'),
+                            content: ButtonBar(
+                              alignment: MainAxisAlignment.center,
+                              children: [
+                                ElevatedButton(onPressed: () => {_modeSwitch(), Navigator.pop(context)}, child: Text('Confirm')),
+                                ElevatedButton(onPressed: () => {Navigator.pop(context)}, child: Text('Cancel'))
+                              ]
+                            )
+                          );
+                        }
+                      )
+                    }, child: Text(current_mode), style: ElevatedButton.styleFrom(primary: modeColor))
+                    ),
                 ]
               ),
 
