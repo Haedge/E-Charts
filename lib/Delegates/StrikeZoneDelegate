@@ -1,0 +1,30 @@
+//Layout for Strikezone
+
+import 'package:flutter/material.dart';
+
+class StrikeZoneDelegate extends SingleChildLayoutDelegate {
+      // You can pass any parameters to this class because you will instantiate your delegate
+      // in the build function where you place your CustomMultiChildLayout.
+      // I will use an Offset for this simple example.
+
+  StrikeZoneDelegate({required this.widgetSize});
+
+  final Size widgetSize;
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints){
+    return BoxConstraints.expand(
+      height: 500,
+      width: 460,
+    );
+  }
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize){
+    return Offset((widgetSize.width / 2) - 395, (widgetSize.height / 2) - 300);
+  }
+  @override
+  bool shouldRelayout(StrikeZoneDelegate oldDelegate) {
+    return widgetSize != oldDelegate.widgetSize;
+  }
+}
