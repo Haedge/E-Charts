@@ -113,6 +113,12 @@ class eCharts extends State<HomePage> {
     pitcher.addGame(pitcher, game);
   }
 
+  _undoPitch(){
+    _totalpitches.removeLast();
+    _calculateInfo();
+    setState(() {});
+  }
+
 
   //Updates ranges, averages, and count
   _calculateInfo(){
@@ -129,6 +135,8 @@ class eCharts extends State<HomePage> {
     int sl_speed_tot = 0;
     List<int> sl_speeds = [];
     int strike_count = 0;
+    _numHBP = 0; _numHits = 0;
+    _numKs = 0; _numWalks = 0;
 
 
     //Goes through all pitches in the pitch array
@@ -168,6 +176,12 @@ class eCharts extends State<HomePage> {
         strike_count += 1;
       }
 
+      if(entry.bb){_numWalks += 1;}
+      if(entry.hbp){_numHBP += 1;}
+      if(entry.k_looking || entry.k_swinging){_numKs += 1;}
+      if(entry.hit){_numHits += 1;}
+
+
     }
 
     //Updates and calculates the values for the widgets
@@ -176,6 +190,8 @@ class eCharts extends State<HomePage> {
         _fb_avg = fb_speed_tot / fb_count;
         _fb_min = fb_speeds.reduce(min);
         _fb_max = fb_speeds.reduce(max);
+      } else {
+        _fb_avg = 0; _fb_min = 0; _fb_max = 0;
       }
     
 
@@ -183,27 +199,35 @@ class eCharts extends State<HomePage> {
         _ch_avg = ch_speed_tot / ch_count;
         _ch_min = ch_speeds.reduce(min);
         _ch_max = ch_speeds.reduce(max);
+      } else {
+        _ch_avg = 0; _ch_min = 0; _ch_max = 0;
       }
 
       if(cb_count != 0){
         _cb_avg = cb_speed_tot / cb_count;
         _cb_min = cb_speeds.reduce(min);
         _cb_max = cb_speeds.reduce(max);
+      } else {
+        _cb_avg = 0; _cb_min = 0; _cb_max = 0;
       }
 
       if(sl_count != 0){
         _sl_avg = sl_speed_tot / sl_count;
         _sl_min = sl_speeds.reduce(min);
         _sl_max = sl_speeds.reduce(max);
+      } else {
+        _sl_avg = 0; _sl_min = 0; _sl_max = 0;
       }
 
-      _strikePercentage = (strike_count / _pitch_count) * 100;
+      _pitch_count = _totalpitches.length;
+      if(_pitch_count == 0){_strikePercentage = 0;}else{_strikePercentage = (strike_count / _pitch_count) * 100;}
       _pitch_count;
       _numHits;
       _numKs;
       _numWalks;
       _numWalks;
       _numHBP;
+      
     });
 
 
@@ -285,7 +309,7 @@ class eCharts extends State<HomePage> {
                                 ElevatedButton(
                                   child: Text('Confirm'),
                                   onPressed: () => {
-                                    
+                                    //Add game method here
                                     Navigator.pop(context)
                                   },
                                 ),
@@ -295,7 +319,24 @@ class eCharts extends State<HomePage> {
                           );
                         }
                       )
-                  }, child: Icon(Icons.add_chart))
+                  }, child: Icon(Icons.add_chart)),
+                  FloatingActionButton(onPressed: () => {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context){
+                        return AlertDialog(
+                          title: Text("Undo Pitch?"),
+                          content: ButtonBar(
+                            alignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(onPressed: () => {_undoPitch(), Navigator.pop(context)}, child: Text('Confirm')),
+                              ElevatedButton(onPressed: () => Navigator.pop(context), child: Text('Cancel'))
+                            ]
+                          )
+                        );
+                      }
+                    ),
+                  }, child: Icon(Icons.undo))
                 ]
               ),
 
@@ -383,7 +424,6 @@ class eCharts extends State<HomePage> {
                         builder: (BuildContext context) {
                           return AlertDialog(
                             title: Text("Pitch Information"),
-                            //backgroundColor: Col,
                             content: StatefulBuilder(
                             builder: (BuildContext context, StateSetter setState){
                               return Container(
@@ -392,7 +432,6 @@ class eCharts extends State<HomePage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    
                                     Text('Pitch Type'),
                                     SizedBox(height: 5),
                                     ToggleButtons(
@@ -481,17 +520,13 @@ class eCharts extends State<HomePage> {
                           ),
                           
                           actions: <Widget>[
-                            
-                            
-
                             //On pressed, checks to see if speed is available, if not, sets to 0, 
                             //then creates a Pitch using the information gathered from buttons, increments pitch_count
                             ElevatedButton(
                               onPressed: () => {if(textController.text.isEmpty){spd = 0} else{spd = int.parse(textController.text)},
                                 pitch_info = Pitch(pitchkind, spd, strike, swing, hit, k_looking, k_swinging, hbp, walk, loc, in_zone),
-                                _totalpitches.add(pitch_info), _pitch_count += 1, print(_totalpitches), if(hit){_numHits += 1}, if(walk){_numWalks += 1}, 
-                                if(hbp){_numHBP += 1}, if(k_looking|| k_swinging){_numKs += 1}, print("Pitch Count: " + _pitch_count.toString()), 
-                                _calculateInfo(), Navigator.pop(context, 'OK')}, 
+                                _totalpitches.add(pitch_info), _calculateInfo(), print(_totalpitches), print("Pitch Count: " + _pitch_count.toString()), 
+                                 Navigator.pop(context)}, 
                               child: const Text('Confirm')
                             ),        
                           ],
