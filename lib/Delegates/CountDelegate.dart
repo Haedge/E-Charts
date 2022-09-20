@@ -1,27 +1,27 @@
-// ignore_for_file: file_names, prefer_const_constructors
-
+// ignore_for_file: file_names
 import 'package:flutter/material.dart';
 
-class OutingDelegate extends SingleChildLayoutDelegate {
+class CountDelegate extends SingleChildLayoutDelegate {
 
-  OutingDelegate({required this.widgetSize});
+  CountDelegate({required this.widgetSize});
 
   final Size widgetSize;
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints){
+    // ignore: prefer_const_constructors
     return BoxConstraints.expand(
-      height: 135,
-      width: 150,
+      height: 60,
+      width: 75,
     );
   }
 
   @override
   Offset getPositionForChild(Size size, Size childSize){
-    return Offset((widgetSize.width) - 200, 300);
+    return Offset((widgetSize.width) - 320, 300);
   }
   @override
-  bool shouldRelayout(OutingDelegate oldDelegate) {
+  bool shouldRelayout(CountDelegate oldDelegate) {
     return widgetSize != oldDelegate.widgetSize;
   }
 }

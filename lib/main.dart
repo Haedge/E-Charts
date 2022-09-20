@@ -5,7 +5,10 @@ import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:my_app/HomePage.dart';
 
-void main() => runApp(eCharts());
+void main(){
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(eCharts());
+  }
 
 class eCharts extends StatelessWidget {
   const eCharts({Key? key}) : super(key: key);

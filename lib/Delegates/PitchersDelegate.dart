@@ -13,7 +13,7 @@ class PitchersDelegate extends SingleChildLayoutDelegate {
   BoxConstraints getConstraintsForChild(BoxConstraints constraints){
     return BoxConstraints.expand(
       height: 50,
-      width: 175,
+      width: 204,
     );
   }
 

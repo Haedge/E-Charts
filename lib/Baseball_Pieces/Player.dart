@@ -4,23 +4,38 @@ import 'package:flutter/material.dart';
 import 'package:my_app/Baseball_Pieces/Pitch.dart';
 import 'package:my_app/GameInstance.dart';
 
+String columnPitcher = "Pitcher";
+String columnGames = "Games";
+String columnTotalPitches = "Total Pitches";
+
+
 class Player{
-  String name = "";
-  Map games = {};
-  List<Pitch> total_pitches = [];
+  String name;
+  List<Pitch>? total_pitches;
+  List<GameInstance>? games;
 
   //Input only being pitcher name and pitch?
-  Player(String name, Map games, List<Pitch> total_pitches){
-    this.name = name;
-    this.games = games;
-    this.total_pitches = total_pitches;
-  }
+  Player({required this.name});
 
   void addGame(Player pitcher, GameInstance game){
-  pitcher.games[game.team] = game.pitches;
-  pitcher.total_pitches.addAll(game.pitches);
-}
+    pitcher.games!.add(game);
+    pitcher.total_pitches!.addAll(game.pitches);
+  }
 
+  // Pitcher[name] = {games, total pitches}
+/*
+  Map<String, List<GameInstance>> toMap(){
+    var map = <String, List<GameInstance>>{
+      columnPitcher: name,
+      columnGames: games.isEmpty ? [] : games,
+    };
+    return map;
+  }
+
+  Player.fromMap(Map<String, List<GameInstance>> map){
+
+  }
+  */
 
 
 }
