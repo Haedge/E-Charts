@@ -11,6 +11,37 @@ class paintPitch extends CustomPainter{
   String mode;
   paintPitch(this.pitches, this.context, this.mode);
   
+  _pitchInsight(Pitch pitch){
+    showDialog(
+      context: context,
+      builder: (BuildContext context){
+        return AlertDialog(
+          title: const Text('Pitch Information'),
+          content: SizedBox(
+            height: 100,
+            width: 300,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('\u2022 Pitch #: ' + (pitches.indexOf(pitch) + 1).toString()),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text("\u2022 " + (pitch.strike ? "Strike, " + 
+                  (pitch.foul ? "Fouled" : pitch.k_looking || pitch.k_swinging ? "Strikeout" : 
+                  (pitch.swing ? (pitch.hit ? "Hit" : "Swung") : "Looking")) :
+                  "Ball" + (pitch.bb || pitch.hbp ? ", Walk" : ""))),
+                ),
+                Text("\u2022 Count Thrown in: " + pitch.oldCount.toString())
+
+              ],
+            )
+          ),
+        );
+      }
+    );
+  }
+
+
 
   @override
   void paint(Canvas canvas, Size size){
@@ -108,7 +139,7 @@ class paintPitch extends CustomPainter{
         // Fastball Shape
         if(pitch.type == "FB"){
           Rect fb = Rect.fromCenter(center: pitch.location, width: 12, height: 12);
-          myCanvas.drawRect(fb, paint);
+          myCanvas.drawRect(fb, paint, onTapDown: (details) => {_pitchInsight(pitch)});
         }
 
         //Curveball Shape
@@ -118,13 +149,13 @@ class paintPitch extends CustomPainter{
           cb.lineTo(pitch.location.dx + 7.5, pitch.location.dy + 10);
           cb.lineTo(pitch.location.dx - 7.5, pitch.location.dy + 10);
           cb.lineTo(pitch.location.dx, pitch.location.dy - 7);
-          myCanvas.drawPath(cb, paint);
+          myCanvas.drawPath(cb, paint, onTapDown: (details) => {_pitchInsight(pitch)});
           
         }
 
         //Change Up Shape
         if(pitch.type == "CH"){
-          myCanvas.drawCircle(pitch.location, 7.5, paint);
+          myCanvas.drawCircle(pitch.location, 7.5, paint, onTapDown: (details) => {_pitchInsight(pitch)});
         }
 
         //Slider Shape
@@ -137,7 +168,8 @@ class paintPitch extends CustomPainter{
           sl.lineTo(pitch.location.dx - 6, pitch.location.dy + 6);
           sl.lineTo(pitch.location.dx - 9, pitch.location.dy);
           sl.lineTo(pitch.location.dx - 6, pitch.location.dy - 7);
-          myCanvas.drawPath(sl, paint, onTapDown: (details) => {print(pitch.location)},);
+          myCanvas.drawPath(sl, paint, onTapDown: (details) => {_pitchInsight(pitch)},
+          );
         }
 
       }

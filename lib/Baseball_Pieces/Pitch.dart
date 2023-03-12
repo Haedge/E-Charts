@@ -16,12 +16,13 @@ class Pitch{
   Offset location = Offset.zero;
   bool in_zone = false;
   bool foul = false;
+  bool bip = false;
   Tuple2<int, int> oldCount = Tuple2<int,int>(0,0);
   int strikes = 0;
   int balls = 0;
 
   Pitch(String type, int speed, bool strike, bool swing, bool hit, bool k_looking, bool k_swinging, bool hbp,
-        bool bb, Offset location, bool in_zone, Tuple2<int,int> oldCount, bool foul){
+        bool bb, Offset location, bool in_zone, Tuple2<int,int> oldCount, bool foul, bool bip){
     this.type = type;
     this.speed = speed;
     this.strike = strike;
@@ -35,6 +36,7 @@ class Pitch{
     this.in_zone = in_zone;
     this.oldCount = oldCount;
     this.foul = foul;
+    this.bip = bip;
   }
 
   _cBalls(){

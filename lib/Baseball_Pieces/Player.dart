@@ -3,40 +3,57 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/Baseball_Pieces/Pitch.dart';
 import 'package:my_app/GameInstance.dart';
-
-String columnPitcher = "Pitcher";
-String columnGames = "Games";
-String columnTotalPitches = "Total Pitches";
+// import 'package:firebase_database/firebase_database.dart';
 
 
 class Player{
   String name;
-  List<Pitch>? total_pitches;
-  List<GameInstance>? games;
+  List<Pitch> total_pitches = [];
+  List<Pitch> unsaved_pitches = [];
+  List<Pitch> pitch_locations = [];
+  List<Pitch> pitches_requested = [];
+  List<GameInstance> games = [];
+  //DatabaseReference _id = "" as DatabaseReference;
 
   //Input only being pitcher name and pitch?
-  Player({required this.name});
+  Player(this.name);
 
-  void addGame(Player pitcher, GameInstance game){
-    pitcher.games!.add(game);
-    pitcher.total_pitches!.addAll(game.pitches);
+  void addGame(GameInstance game){
+    GameInstance new_game = GameInstance(game.pitches, game.pitcher, game.team, game.mm, game.dd);
+    games.add(game);
+    total_pitches.addAll(new_game.pitches.toList());
   }
 
-  // Pitcher[name] = {games, total pitches}
-/*
-  Map<String, List<GameInstance>> toMap(){
-    var map = <String, List<GameInstance>>{
-      columnPitcher: name,
-      columnGames: games.isEmpty ? [] : games,
+  getCertPitches(String type){
+    pitches_requested = [];
+    /*
+    if(games.isNotEmpty){
+      for(var game in games){
+        for(var pitch in game.pitches){
+          if(pitch.type == type){
+            certPitches.add(pitch);
+          }
+        }
+      }
+    }
+    */
+    for(var pitch in total_pitches){
+      if(pitch.type == type){
+        pitches_requested.add(pitch);
+      }
+    }
+  }
+
+  // void setId(DatabaseReference id){
+  //   this._id = id;
+  // }
+
+  Map<String, dynamic> toJson(){
+    return {
+      'pitcher' : this.name,
+      'games' : this.games,
     };
-    return map;
   }
-
-  Player.fromMap(Map<String, List<GameInstance>> map){
-
-  }
-  */
-
 
 }
 

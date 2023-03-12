@@ -9,10 +9,9 @@ class GameInstance {
   List<Pitch> pitches = [];
   Player pitcher;
   String team;
-  String day;
-  String month;
-  int game_num;
+  String mm;
+  String dd;
 
-  GameInstance(this.pitches, this.pitcher, this.team, this.game_num, this.month, this.day);
+  GameInstance(this.pitches, this.pitcher, this.team, this.mm, this.dd);
   
 }
