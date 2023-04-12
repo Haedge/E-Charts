@@ -58,6 +58,37 @@ class eCharts extends State<HomePage> {
   int _numHits = 0; int _numWalks = 0; int _numHBP = 0;
   int _numKs = 0; double _strikePercentage = 0;
 
+  final List<String> pitchChoices = ['FB', 'CH', 'CB', 'SL'];
+
+  final Map<String, double> cExtras = {'numHBP' : 0, 'numHits' : 0, 'numKs' : 0,
+                                      'strike_count' : 0, 'numWalks' : 0, 'strikeP' : 0,
+                                      'pitch_count' : 0};
+
+
+
+  Map<String, Map<String, double>> pitchStats = {
+    'FB' : {'avg' : 0, 'min' : 0, 'max' : 0, 'StrikeP' : 0},
+    'CH' : {'avg' : 0, 'min' : 0, 'max' : 0, 'StrikeP' : 0},
+    'CB' : {'avg' : 0, 'min' : 0, 'max' : 0, 'StrikeP' : 0},
+    'SL' : {'avg' : 0, 'min' : 0, 'max' : 0, 'StrikeP' : 0}
+  };
+
+  Map<String, int> countCounts = {
+    'start' : 0, 'even' : 0,
+    '1b0s' : 0, '0b1s' : 0,
+
+    'stb' : 0, 'sts' : 0,
+    '1btb' : 0, '1bts' : 0,
+    '1stb' : 0, '1sts' : 0,
+  };
+
+  Map<String, double> countPercent = {
+    'start2ball' : 0, 'start2strike' : 0,
+    '1ball2ball' : 0, '1ball2strike' : 0,
+    '1strike2ball' : 0, '1strike2strike' : 0,
+    'even2ball' : 0, 'even2strike' : 0
+  };
+
   double _fbSP = 0; double _cbSP = 0;
   double _chSP = 0; double _slSP = 0;
 
@@ -94,6 +125,7 @@ class eCharts extends State<HomePage> {
 
 
   String _currentPitcher = " ";
+  String _pitcherRemove = " ";
   TextEditingController _moText = TextEditingController();
   TextEditingController _dayText = TextEditingController();
   TextEditingController _yrText = TextEditingController();
@@ -115,7 +147,7 @@ class eCharts extends State<HomePage> {
     Printing.layoutPdf(onLayout: (PdfPageFormat format) async {
       final doc = pw.Document();
 
-      final image = await WidgetWraper.fromKey(
+      final image = await WidgetWrapper.fromKey(
         key: _printKey,
         pixelRatio: 1.0,
         );
@@ -151,7 +183,7 @@ class eCharts extends State<HomePage> {
     _ch_avg = 0; _ch_min = 0; _ch_max = 0;
     _cb_avg = 0; _cb_min = 0; _cb_max = 0;
     _sl_avg = 0; _sl_min = 0; _sl_max = 0;
-    _fbSP = 0; _cbSP = 0; _chSP = 0; _slSP = 0;
+    _fbSP = 0; _cbSP = 0; _chSP = 0; _slSP = 0; // Strike Percentage
     _calculateCountPerc([]);
     setState(() {});
     current_count = Tuple2<int,int> (0,0);
@@ -203,36 +235,51 @@ class eCharts extends State<HomePage> {
     _even = 0;
     int totps = pitches.length;
 
+    countCounts.forEach((key, value) {countCounts[key] = 0;});
+
     for(Pitch pitch in pitches){
       if(pitch.oldCount == Tuple2<int,int> (0,0)){
         if(pitch.strike){
           _sts += 1;
+          countCounts['sts'] = countCounts['sts']! + 1;
         } else {
           _stb += 1;
+          countCounts['stb'] = countCounts['stb']! + 1;
         }
         _start += 1;
+        countCounts['start'] = countCounts['start']! + 1;
 
       } else if(pitch.oldCount == Tuple2<int,int> (1,0)){
         if(pitch.strike){
           _1bts += 1;
+          countCounts['1bts'] = countCounts['1bts']! + 1;
         } else {
           _1btb += 1;
+          countCounts['1btb'] = countCounts['1btb']! + 1;
         }
         _1b0s += 1;
+        countCounts['1b0s'] = countCounts['1b0s']! + 1;
+
       } else if(pitch.oldCount == Tuple2<int,int> (0,1)){
         if(pitch.strike){
           _1sts += 1;
+          countCounts['1sts'] = countCounts['1sts']! + 1;
         } else {
           _1stb += 1;
+          countCounts['1stb'] = countCounts['1stb']! + 1;
         }
         _0b1s += 1;
+        countCounts['0b1s'] = countCounts['0b1s']! + 1;
       } else if(pitch.oldCount == Tuple2<int,int> (1,1)){
         if(pitch.strike){
           _1b1sts += 1;
+          countCounts['1bsts'] = countCounts['1bsts']! + 1;
         } else {
           _1b1stb += 1;
+          countCounts['1b1stb'] = countCounts['1b1stb']! + 1;
         }
         _even += 1;
+        countCounts['even'] = countCounts['even']! + 1;
       }
     }
 
@@ -241,23 +288,42 @@ class eCharts extends State<HomePage> {
     _1strike2ball = 0; _1strike2strike = 0;
     _even2ball = 0; _even2strike = 0;
 
+    countPercent.forEach((key, value) {countPercent[key] = 0;});
+
     if(totps > 0){
-      _start2ball = (_stb / _start) * 100;// 0-0 -> 1-0
-      _start2strike = (_sts / _start) * 100; // 0-0 -> 0-1
+      int? start = countCounts['start'];
+      _start2ball = (_stb / _start) * 100;
+      _start2strike = (_sts / _start) * 100; 
+      countPercent['start2ball'] = (countCounts['stb']! / start!) * 100; // 0-0 -> 1-0
+      countPercent['start2strike'] = (countCounts['sts']! / start) * 100; // 0-0 -> 0-1
+
       if(_1b0s > 0){
+        int? ball0s = countCounts['1b0s']; 
         _1ball2ball = (_1btb / _1b0s) * 100; // 1-0 -> 2-0
         _1ball2strike = (_1bts / _1b0s) * 100;
+        countPercent['1ball2ball'] = (countCounts['1btb']! / ball0s!) * 100;
+        countPercent['1ball2strike'] = (countCounts['1bts']! / ball0s) * 100;
+        
         if(_even > 0){
+          int? even = countCounts['even'];
           _even2ball = (_1b1stb / _even) * 100; // 1-1 -> 2-1
           _even2strike = (_1b1sts / _even) * 100; // 1-1 -> 1-2
+          countPercent['even2ball'] = (countCounts['1b1stb']! / even!) * 100;
+          countPercent['even2strike'] = (countCounts['1b1sts']! / even) * 100;
         } // 1-0 -> 1-1
       }
       if (_0b1s > 0){
+        int? s2ball = countCounts['0b1s'];
         _1strike2ball = (_1stb / _0b1s) * 100; // 0-1 -> 1-1
         _1strike2strike = (_1sts / _0b1s) * 100; // 0-1 -> 0-2
+        countPercent['1strike2ball'] = (countCounts['1stb']! / s2ball!);
+        countPercent['1strike2strike'] = (countCounts['1sts']! / s2ball);
         if(_even > 0){
+          int? even = countCounts['even'];
           _even2ball = (_1b1stb / _even) * 100; // 1-1 -> 2-1
           _even2strike = (_1b1sts / _even) * 100; // 1-1 -> 1-2
+          countPercent['even2ball'] = (countCounts['1b1stb']! / even!) * 100;
+          countPercent['eventstrike'] = (countCounts['1b1sts']! / even) * 100;
         }
       }
     }
@@ -318,64 +384,131 @@ class eCharts extends State<HomePage> {
     _numHBP = 0; _numHits = 0;
     _numKs = 0; _numWalks = 0;
 
+      // count for avg, total speed, num strikes, total thrown
+
+    final Map<String, Map<String, dynamic>> cInf = {};
+    cExtras.forEach((key, value) => cExtras[key] = 0);
+    
+    for(String pitch in pitchChoices){
+      cInf[pitch] = {'count' : 0, 'spdTot' : 0, 'strike' : 0, 'tot' : 0, 'speeds': []};
+    }
+
+    List<int> speed_ints = [];
+    int? minspd = 0;
+    int? maxspd = 0;
 
 
     //Goes through all pitches in the pitch array
     for(Pitch entry in pitches){
-      String p_type = entry.type;
-      int p_spd = entry.speed;
-      bool p_strike = entry.strike;
+      if(entry.type != null){
+        String p_type = entry.type;
+        int p_spd = entry.speed;
+        bool p_strike = entry.strike;
 
-      //Gathers pitch information based on type
-      if(p_type == "FB"){
-        p_strike ? fb_strikes += 1 : fb_strikes;
-        fb_tot += 1;
-        if(p_spd != 0){
-          fb_count += 1;
-          fb_speed_tot += p_spd;
-          fb_speeds.add(p_spd);
+        p_strike ? {
+          cInf[p_type]!['strike'] += 1,
+          cExtras['strike_count'] = cExtras['strike_count']! + 1,
+        } : 0;
+        cInf[p_type]!['tot'] += 1;
+
+        p_spd != 0 ? {
+          cInf[p_type]!['count'] += 1,
+          cInf[p_type]!['spdTot'] += p_spd,
+          cInf[p_type]!['speeds'].add(p_spd)
+        } : 0;
+
+        entry.bb ? cExtras['numWalks'] = cExtras['numWalks']! + 1 : 0;
+        entry.hbp ? cExtras['numHBP'] = cExtras['numHBP']! + 1 : 0;
+        entry.k_looking || entry.k_swinging ? cExtras['numKs'] = cExtras['numKs']! + 1 : 0;
+        entry.hit ? cExtras['numHits'] = cExtras['numHits']! + 1 : 0;
+        cExtras['pitch_count'] = cExtras['pitch_count']! +  1;
+
+        //Gathers pitch information based on type
+        if(p_type == "FB"){
+          p_strike ? fb_strikes += 1 : fb_strikes;
+          fb_tot += 1;
+          if(p_spd != 0){
+            fb_count += 1;
+            fb_speed_tot += p_spd;
+            fb_speeds.add(p_spd);
+          }
+        }else if(p_type == "CH"){
+          p_strike ? ch_strikes += 1 : ch_strikes;
+          ch_tot += 1;
+          if(p_spd != 0){
+            ch_count += 1;
+            ch_speed_tot += p_spd;
+            ch_speeds.add(p_spd);
+          }
+        }else if(p_type == "CB"){
+          p_strike ? cb_strikes += 1 : cb_strikes;
+          cb_tot += 1;
+          if(p_spd != 0){
+            cb_count += 1;
+            cb_speed_tot += p_spd;
+            cb_speeds.add(p_spd);
+          }
+        } else if(p_type == "SL"){
+          p_strike ? sl_strikes += 1 : sl_strikes;
+          sl_tot += 1;
+          if(p_spd != 0){
+            sl_count += 1;
+            sl_speed_tot += p_spd;
+            sl_speeds.add(p_spd);
+          }
         }
-      }else if(p_type == "CH"){
-        p_strike ? ch_strikes += 1 : ch_strikes;
-        ch_tot += 1;
-        if(p_spd != 0){
-          ch_count += 1;
-          ch_speed_tot += p_spd;
-          ch_speeds.add(p_spd);
+
+        if(p_strike){
+          strike_count += 1;
         }
-      }else if(p_type == "CB"){
-        p_strike ? cb_strikes += 1 : cb_strikes;
-        cb_tot += 1;
-        if(p_spd != 0){
-          cb_count += 1;
-          cb_speed_tot += p_spd;
-          cb_speeds.add(p_spd);
-        }
-      } else if(p_type == "SL"){
-        p_strike ? sl_strikes += 1 : sl_strikes;
-        sl_tot += 1;
-        if(p_spd != 0){
-          sl_count += 1;
-          sl_speed_tot += p_spd;
-          sl_speeds.add(p_spd);
-        }
+
+        if(entry.bb){_numWalks += 1;}
+        if(entry.hbp){_numHBP += 1;}
+        if(entry.k_looking || entry.k_swinging){_numKs += 1;}
+        if(entry.hit){_numHits += 1;}
       }
-
-      if(p_strike){
-        strike_count += 1;
-      }
-
-      if(entry.bb){_numWalks += 1;}
-      if(entry.hbp){_numHBP += 1;}
-      if(entry.k_looking || entry.k_swinging){_numKs += 1;}
-      if(entry.hit){_numHits += 1;}
-
-
     }
 
     //Updates and calculates the values for the widgets
     setState((){
-      fb_tot != 0 ? _fbSP = (fb_strikes / fb_tot) * 100 : _fbSP = 0;
+
+      for(String pname in pitchChoices){
+
+          // pitchStats = 'FB' : {'avg' : 0, 'min' : 0, 'max' : 0, 'StrikeP' : 0},
+          // cInf[pitch] = {'count' : 0, 'spdTot' : 0, 'strike' : 0, 'tot' : 0, 'speeds': []};
+
+        cInf[pname]!['tot'] != 0 ? {
+          pitchStats[pname]!['StrikeP'] = (cInf[pname]!['strike'] !/ cInf[pname]!['tot']) * 100 
+        } : pitchStats[pname]!['StrikeP'] = 0;
+
+        cInf[pname]!['count'] != 0 ? {
+          speed_ints = List<int>.from(cInf[pname]!['speeds'] ?? []),
+          minspd = speed_ints.isNotEmpty ? speed_ints.reduce(min) : 0,
+          maxspd = speed_ints.isNotEmpty ? speed_ints.reduce(max) : 0,
+          pitchStats[pname]!['avg'] = cInf[pname]!['spdTot'] / cInf[pname]!['count'],
+          pitchStats[pname]!['min'] = minspd!.toDouble(),
+          pitchStats[pname]!['max'] = maxspd!.toDouble()
+        } : {
+          pitchStats[pname]!['avg'] = 0,
+          pitchStats[pname]!['min'] = 0,
+          pitchStats[pname]!['max'] = 0
+        };
+      }
+
+      _pitch_count = _currentPitches.length;
+      if(_pitch_count == 0){
+        _strikePercentage = 0;
+        cExtras['strikeP'] = 0;
+        current_count = Tuple2<int,int> (0,0);
+      }else{
+        _strikePercentage = (strike_count / _pitch_count) * 100;
+        cExtras['strikeP'] = (cExtras['strike_count']! / _pitch_count) * 100;
+      }
+
+      cExtras;
+      cInf;
+
+      // fb_tot != 0 ? _fbSP = (fb_strikes / fb_tot) * 100 : _fbSP = 0;
       if(fb_count != 0){
         _fb_avg = fb_speed_tot / fb_count;
         _fb_min = fb_speeds.reduce(min);
@@ -442,6 +575,34 @@ class eCharts extends State<HomePage> {
     _currentPitches = pitches;
   }
 
+  _addPitcher(String pitcher){
+    _Pitchers.add(pitcher);
+    _pitchPlayer.add(Player(pitcher));
+    setState(() {});
+  }
+
+  Player _findPitcher(String pitcher){
+    for(Player player in _pitchPlayer){
+      if(player.name == pitcher){
+        return player;
+      }
+    }
+    return Player("Not Found");
+  }
+
+  _removePitcher(String pitcher){
+    List<Player> copyPlayer = List.from(_pitchPlayer);
+    for(Player player in copyPlayer){
+      if(player.name == pitcher){
+        _pitchPlayer.remove(player);
+        _Pitchers.remove(pitcher);
+      }
+    }
+    setState(() {});
+    _pitcherRemove = " ";
+    _currentPitcher = " ";
+  }
+
 //The Program
   @override
   Widget build(BuildContext context) {
@@ -454,6 +615,7 @@ class eCharts extends State<HomePage> {
     String month = DateTime.now().month.toString();
     String day = DateTime.now().day.toString();
     String year = DateTime.now().year.toString();
+    TextEditingController pitcher_controller = TextEditingController();
 
 
     for(String pitcher in _Pitchers){
@@ -547,9 +709,9 @@ class eCharts extends State<HomePage> {
                                     // await DatabaseHelper.instance.add(
                                     //   Player(name: _currentPitcher),
                                     // );
-                                    GameInstance test_Hist = _createInstance(_pitchPlayer[_Pitchers.indexOf(_currentPitcher)],
+                                    GameInstance test_Hist = _createInstance(_findPitcher(_currentPitcher),
                                     _currentPitches, month, day, _currentTeam);
-                                    _pitchPlayer[_Pitchers.indexOf(_currentPitcher)].addGame(test_Hist);
+                                    _findPitcher(_currentPitcher).addGame(test_Hist);
                                     setState(() {_pitcherGamesG;});
                                     Navigator.pop(context);
                                     },
@@ -618,19 +780,78 @@ class eCharts extends State<HomePage> {
                       )
                     }, child: Text('New Count'), style: ElevatedButton.styleFrom(primary: modeColor))
                     ),
+                    SizedBox(
+                    height: 40,
+                    child: ElevatedButton(onPressed: () => {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context){
+                          return AlertDialog(
+                            title: Text('Add pitcher?'),
+                            content: Container(
+                              height: 300,
+                              child:Column(
+                                children: [
+                                    TextField(
+                                        controller: pitcher_controller,
+                                        keyboardType: TextInputType.name,
+                                        decoration: InputDecoration(
+                                          helperText: "Pitcher Name",
+                                          constraints: BoxConstraints(
+                                            maxWidth: 125,
+                                            maxHeight: 35,
+                                          ),
+                                        ),
+                                      ),
+                                    ButtonBar(
+                                      alignment: MainAxisAlignment.center,
+                                      children: [
+                                        ElevatedButton(onPressed: () => {_addPitcher(pitcher_controller.text), Navigator.pop(context)}, child: Text('Confirm')),
+                                        ElevatedButton(onPressed: () => {Navigator.pop(context)}, child: Text('Cancel'))
+                                      ]
+                                    ),
+                                    Text("Remove Pitcher?"),
+                                    DropdownButton<String>(
+                                      value: _pitcherRemove,
+                                      onChanged: (String? newVal) {
+                                        setState(() {
+                                          _pitcherRemove = newVal!;
+                                          print('Pitcher to Remove: $_pitcherRemove');
+                                          print(_findPitcher(_pitcherRemove).name);
+                                        });
+                                      },
+                                      items: _Pitchers.map((String item) =>
+                                      DropdownMenuItem<String>(value: item, child: Text(item))).toList(),
+                                    ),
+                                  ButtonBar(
+                                      alignment: MainAxisAlignment.center,
+                                      children: [
+                                        ElevatedButton(onPressed: () => {_removePitcher(_pitcherRemove), Navigator.pop(context)}, child: Text('Confirm')),
+                                        ElevatedButton(onPressed: () => {Navigator.pop(context)}, child: Text('Cancel'))
+                                      ]
+                                    ),
+                                ]
+                              )
+                            )
+                          );
+                        }
+                      )
+                    }, child: Text('PT'), style: ElevatedButton.styleFrom(primary: modeColor))
+                    ),
                 ]
               ),
 
               //Pitcher Dropdown
               CustomSingleChildLayout(
-                delegate: DellySkelly(widgetSize: dellySkellys, height: 50, width: 204, off1: dellySkellys.width - 425, off2: 70),
+                delegate: DellySkelly(widgetSize: dellySkellys, height: 50, width: 210, off1: dellySkellys.width - 425, off2: 70),
                 child: DropdownButton<String>(
                   value: _currentPitcher,
                   onChanged: (String? newValue) {
                     setState(() {
                       _currentPitcher = newValue!;
-                      print(_pitchPlayer[_Pitchers.indexOf(_currentPitcher)].name);
-                      _currentPitches = _pitchPlayer[_Pitchers.indexOf(_currentPitcher)].total_pitches;
+                      print('Current Pitcher: $_currentPitcher');
+                      print(_findPitcher(_currentPitcher).name);
+                      _currentPitches = _findPitcher(_currentPitcher).total_pitches;
                       _currentPitches.isNotEmpty ? (_currentPitches.last) : print('empty');
                       _calculateCountPerc(_currentPitches);
                       _calculateInfo(_currentPitches);
@@ -641,7 +862,7 @@ class eCharts extends State<HomePage> {
 
                       if(_pitcherGamesG.isNotEmpty){
                         for(var game in _pitcherGamesG){
-                          _pitcherGamesS.add((game.team + ': '+ game.mm + '/' + game.dd));
+                          _pitcherGamesS.add(('${game.team}: ${game.mm}/${game.dd}'));
                         }
                       }
 
@@ -653,7 +874,7 @@ class eCharts extends State<HomePage> {
                     });
                   },
                   items: _Pitchers.map((String item) =>
-                  DropdownMenuItem<String>(child: Text(item), value: item)).toList(),
+                  DropdownMenuItem<String>(value: item, child: Text(item))).toList(),
                 )
               ),
 
@@ -663,7 +884,7 @@ class eCharts extends State<HomePage> {
                 child: Row(
                   children: [
                     Text(
-                      month + ' / ' + day + ' / ' + year,
+                      '$month / $day / $year',
                       style: TextStyle(
                         fontSize: 18,
                         decoration: TextDecoration.underline,
@@ -688,8 +909,8 @@ class eCharts extends State<HomePage> {
 
                         if(entry == 'FBs'){
                           //print(_pitchPlayer[_Pitchers.indexOf(_currentPitcher)].getCertPitches(entry));
-                          _pitchPlayer[_Pitchers.indexOf(_currentPitcher)].getCertPitches('FB');
-                          _currentPitches = _pitchPlayer[_Pitchers.indexOf(_currentPitcher)].pitches_requested;
+                          _findPitcher(_currentPitcher).getCertPitches('FB');
+                          _currentPitches = _findPitcher(_currentPitcher).pitches_requested;
                           //print(_currentPitches.length);
                         }
                         //GameInstance game = _pitcherGamesG[_pitcherGamesS.indexOf(entry)];
@@ -789,7 +1010,6 @@ class eCharts extends State<HomePage> {
                                         minHeight: 50.0,
                                         minWidth: 100.0,
                                       ),
-                                      children: PTypes,
                                       isSelected: isPType,
                                       onPressed: (int index) {
                                       setState(() {
@@ -802,6 +1022,7 @@ class eCharts extends State<HomePage> {
                                         }
                                       });
                                     },
+                                      children: PTypes,
                                     ),
                                     SizedBox(height: 15),
                                     Text('Speed: '),
@@ -854,7 +1075,7 @@ class eCharts extends State<HomePage> {
                                           foul = isPAction[1];
                                           bip = isPAction[7];
                                           if(swing || k_looking){strike = true;}
-                                          
+                                          // TODO: MAKE THIS INTO A MAP
 
                                         });
                                         },
@@ -871,15 +1092,18 @@ class eCharts extends State<HomePage> {
                             actions: <Widget>[
                               //On pressed, checks to see if speed is available, if not, sets to 0, 
                               //then creates a Pitch using the information gathered from buttons, increments pitch_count
+
+                              // TODO: make a Pitch able to take Map for entry, Map<String, bool>
+                              // TODO: I am dumb
                               ElevatedButton(
                                 onPressed: () => {if(textController.text.isEmpty){spd = 0} else{spd = int.parse(textController.text)},
                                   pitch_info = Pitch(pitchkind, spd, strike, swing, hit, k_looking, k_swinging, hbp, walk, loc, in_zone, current_count, foul, bip),
                                    _cPitchLocations.add(pitch_info.location), 
-                                   _pitchPlayer[_Pitchers.indexOf(_currentPitcher)].total_pitches.add(pitch_info),
-                                   _calcCombo(_currentPitcher), print(_currentPitches), 
-                                   print('Count: ' + current_count.item1.toString() + ', ' + current_count.item2.toString()), 
-                                   print("Pitch Count: " + _pitch_count.toString()), 
-                                  print(_pitchPlayer[_Pitchers.indexOf(_currentPitcher)].total_pitches),
+                                   _findPitcher(_currentPitcher).total_pitches.add(pitch_info),
+                                  _calcCombo(_currentPitcher), // print(_currentPitches), 
+                                  //  print('Count: ${current_count.item1}, ${current_count.item2}'), 
+                                  //  print("Pitch Count: $_pitch_count"), 
+                                  // print(_findPitcher(_currentPitcher).total_pitches),
                                   Navigator.pop(context)}, 
                                 child: const Text('Confirm')
                               ),        
@@ -934,12 +1158,12 @@ class eCharts extends State<HomePage> {
                         width: 200,
                         child: Column(
                           children: [
-                            Text("Pitch Count: " + _pitch_count.toString(), style: TextStyle(fontSize: 18)),
-                            Text("Strike %: " + _strikePercentage.toStringAsFixed(0), style: TextStyle(fontSize: 18)),
-                            Text("Ks: " + _numKs.toString(), style: TextStyle(fontSize: 18)),
-                            Text("Hits: " + _numHits.toString(), style: TextStyle(fontSize: 18)),
-                            Text("BBs: " + _numWalks.toString(), style: TextStyle(fontSize: 18)),
-                            Text("HBPs: " + _numHBP.toString(), style: TextStyle(fontSize: 18))
+                            Text("Pitch Count: ${cExtras['pitch_count']}", style: TextStyle(fontSize: 18)),
+                            Text("Strike %: ${cExtras['strikeP']!.toStringAsFixed(0)}", style: TextStyle(fontSize: 18)),
+                            Text("Ks: ${cExtras['numKs']}", style: TextStyle(fontSize: 18)),
+                            Text("Hits: ${cExtras['numHits']}", style: TextStyle(fontSize: 18)),
+                            Text("BBs: ${cExtras['numWalks']}", style: TextStyle(fontSize: 18)),
+                            Text("HBPs: ${cExtras['numHBP']}", style: TextStyle(fontSize: 18))
                           ]
                         ),
                       ),
@@ -959,35 +1183,35 @@ class eCharts extends State<HomePage> {
                         width: 200,
                         child: Column(
                           children: [
-                            Text("FB avg: " + _fb_avg.toStringAsFixed(2), style: TextStyle(fontSize: 18)),
-                            Text("FB S%: " + _fbSP.toStringAsFixed(2), style: TextStyle(fontSize: 15)),
-                            Text(_fb_min.toStringAsFixed(2) + " -- " + _fb_max.toStringAsFixed(2), style: TextStyle(fontSize: 15)),
+                            Text("FB avg: ${pitchStats['FB']!['avg']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 18)),
+                            Text("FB S%: ${_fbSP.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
+                            Text("${_fb_min.toStringAsFixed(2)} -- ${_fb_max.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
 
-                            Text("CB avg: " + _cb_avg.toStringAsFixed(2), style: TextStyle(fontSize: 18)),
-                            Text("CB S%: " + _cbSP.toStringAsFixed(2), style: TextStyle(fontSize: 15)),
-                            Text(_cb_min.toStringAsFixed(2) + " -- " + _cb_max.toStringAsFixed(2), style: TextStyle(fontSize: 15)),
+                            Text("CB avg: ${pitchStats['CB']!['avg']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 18)),
+                            Text("CB S%: ${_cbSP.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
+                            Text("${_cb_min.toStringAsFixed(2)} -- ${_cb_max.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
 
-                            Text("CH avg: " + _ch_avg.toStringAsFixed(2), style: TextStyle(fontSize: 18)),
-                            Text("CH S%: " + _chSP.toStringAsFixed(2), style: TextStyle(fontSize: 15)),
-                            Text(_ch_min.toStringAsFixed(2) + " -- " + _ch_max.toStringAsFixed(2), style: TextStyle(fontSize: 15)),
+                            Text("CH avg: ${pitchStats['CH']!['avg']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 18)),
+                            Text("CH S%: ${pitchStats['CH']!['StrikeP']!}", style: TextStyle(fontSize: 15)),
+                            Text("${_ch_min.toStringAsFixed(2)} -- ${_ch_max.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
 
-                            Text("SL avg: " + _sl_avg.toStringAsFixed(2), style: TextStyle(fontSize: 18)),
-                            Text("SL S%: " + _slSP.toStringAsFixed(2), style: TextStyle(fontSize: 15)),
-                            Text(_sl_min.toStringAsFixed(2) + " -- " + _sl_max.toStringAsFixed(2), style: TextStyle(fontSize: 15)),
+                            Text("SL avg: ${pitchStats['SL']!['avg']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 18)),
+                            Text("SL S%: ${pitchStats['SL']!['StrikeP']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
+                            Text("${_sl_min.toStringAsFixed(2)} -- ${_sl_max.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
 
                             Text(''),
                             
-                            Text("In 0-0 Counts: " + _start.toString()),
-                            Text("1-0: " + _start2ball.toStringAsFixed(2) + "%, 0-1: " + _start2strike.toStringAsFixed(2) + "%"),
+                            Text("In 0-0 Counts: $_start"),
+                            Text("1-0: ${_start2ball.toStringAsFixed(2)}%, 0-1: ${_start2strike.toStringAsFixed(2)}%"),
 
-                            Text("In 1-0 Counts: " + _1b0s.toString()),
-                            Text("2-0: " + _1ball2ball.toStringAsFixed(2) + "%, 1-1: " + _1ball2strike.toStringAsFixed(2) + "%"),
+                            Text("In 1-0 Counts: $_1b0s"),
+                            Text("2-0: ${_1ball2ball.toStringAsFixed(2)}%, 1-1: ${_1ball2strike.toStringAsFixed(2)}%"),
 
-                            Text("In 0-1 Counts: " + _0b1s.toString()),
-                            Text("1-1: " + _1strike2ball.toStringAsFixed(2) + "%, 0-2: " + _1strike2strike.toStringAsFixed(2) + "%"),
+                            Text("In 0-1 Counts: $_0b1s"),
+                            Text("1-1: ${_1strike2ball.toStringAsFixed(2)}%, 0-2: ${_1strike2strike.toStringAsFixed(2)}%"),
 
-                            Text("In 1-1 Counts: " + _even.toString()),
-                            Text("2-1: " + _even2ball.toStringAsFixed(2) + "%, 1-2: " + _even2strike.toStringAsFixed(2) + "%"),
+                            Text("In 1-1 Counts: $_even"),
+                            Text("2-1: ${_even2ball.toStringAsFixed(2)}%, 1-2: ${_even2strike.toStringAsFixed(2)}%"),
 
                           ]
                         ),
@@ -1009,7 +1233,7 @@ class eCharts extends State<HomePage> {
                         child: Column (
                           children: [
                             Text('Count', style: TextStyle(fontSize: 20)),
-                            Text(current_count.item1.toString() + " - " + current_count.item2.toString(),
+                            Text("${current_count.item1} - ${current_count.item2}",
                               style: TextStyle(fontSize: 20))],
                         )
                       )
