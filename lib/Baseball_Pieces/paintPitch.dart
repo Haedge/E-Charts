@@ -23,15 +23,14 @@ class paintPitch extends CustomPainter{
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('\u2022 Pitch #: ' + (pitches.indexOf(pitch) + 1).toString()),
+                Text('\u2022 Pitch #: ${pitches.indexOf(pitch) + 1}'),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text("\u2022 " + (pitch.strike ? "Strike, " + 
-                  (pitch.foul ? "Fouled" : pitch.k_looking || pitch.k_swinging ? "Strikeout" : 
-                  (pitch.swing ? (pitch.hit ? "Hit" : "Swung") : "Looking")) :
-                  "Ball" + (pitch.bb || pitch.hbp ? ", Walk" : ""))),
+                  child: Text("\u2022 ${pitch.strike ? "Strike, ${pitch.foul ? "Fouled" : pitch.k_looking || pitch.k_swinging ? "Strikeout" : 
+                  (pitch.swing ? (pitch.hit ? "Hit" : "Swung") : "Looking")}" :
+                  "Ball${pitch.bb || pitch.hbp ? ", Walk" : ""}"}"),
                 ),
-                Text("\u2022 Count Thrown in: " + pitch.oldCount.toString())
+                Text("\u2022 Count Thrown in: ${pitch.oldCount}")
 
               ],
             )

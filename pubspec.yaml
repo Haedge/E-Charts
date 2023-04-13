@@ -40,15 +40,12 @@ dependencies:
   flutter_blue: ^0.8.0
   pdf: ^3.6.3
   printing: ^5.6.3
-  syncfusion_flutter_pdf: ^19.3.55-beta
+  syncfusion_flutter_pdf: ^20.4.54
   screenshot: ^1.2.3
   sqflite: ^2.0.2
-  path_provider: ^2.0.10
   multi_select_flutter: ^4.1.2
   tuple: ^2.0.0
-  firebase_core: ^1.12.0
-  firebase_database: ^9.0.7
-  multiselect: ^0.0.4
+  multiselect: ^0.1.0
 
 dev_dependencies:
   flutter_test:
@@ -59,7 +56,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^1.0.0
+  flutter_lints: ^2.0.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

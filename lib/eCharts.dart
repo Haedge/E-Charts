@@ -1096,7 +1096,7 @@ class eCharts extends State<HomePage> {
                               // TODO: make a Pitch able to take Map for entry, Map<String, bool>
                               // TODO: I am dumb
                               ElevatedButton(
-                                onPressed: () => {if(textController.text.isEmpty){spd = 0} else{spd = int.parse(textController.text)},
+                                onPressed: () => {if(pitchkind != ""){if(textController.text.isEmpty){spd = 0} else{spd = int.parse(textController.text)},
                                   pitch_info = Pitch(pitchkind, spd, strike, swing, hit, k_looking, k_swinging, hbp, walk, loc, in_zone, current_count, foul, bip),
                                    _cPitchLocations.add(pitch_info.location), 
                                    _findPitcher(_currentPitcher).total_pitches.add(pitch_info),
@@ -1104,7 +1104,7 @@ class eCharts extends State<HomePage> {
                                   //  print('Count: ${current_count.item1}, ${current_count.item2}'), 
                                   //  print("Pitch Count: $_pitch_count"), 
                                   // print(_findPitcher(_currentPitcher).total_pitches),
-                                  Navigator.pop(context)}, 
+                                  Navigator.pop(context)}}, 
                                 child: const Text('Confirm')
                               ),        
                             ],
@@ -1184,33 +1184,33 @@ class eCharts extends State<HomePage> {
                         child: Column(
                           children: [
                             Text("FB avg: ${pitchStats['FB']!['avg']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 18)),
-                            Text("FB S%: ${_fbSP.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
-                            Text("${_fb_min.toStringAsFixed(2)} -- ${_fb_max.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
+                            Text("FB S%: ${pitchStats['FB']!['StrikeP']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
+                            Text("${pitchStats['FB']!['min']!.toStringAsFixed(2)} -- ${pitchStats['FB']!['max']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
 
                             Text("CB avg: ${pitchStats['CB']!['avg']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 18)),
-                            Text("CB S%: ${_cbSP.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
-                            Text("${_cb_min.toStringAsFixed(2)} -- ${_cb_max.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
+                            Text("CB S%: ${pitchStats['CB']!['StrikeP']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
+                            Text("${pitchStats['CB']!['min']!.toStringAsFixed(2)} -- ${pitchStats['CB']!['max']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
 
                             Text("CH avg: ${pitchStats['CH']!['avg']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 18)),
                             Text("CH S%: ${pitchStats['CH']!['StrikeP']!}", style: TextStyle(fontSize: 15)),
-                            Text("${_ch_min.toStringAsFixed(2)} -- ${_ch_max.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
+                            Text("${pitchStats['CH']!['min']!.toStringAsFixed(2)} -- ${pitchStats['CH']!['max']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
 
                             Text("SL avg: ${pitchStats['SL']!['avg']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 18)),
                             Text("SL S%: ${pitchStats['SL']!['StrikeP']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
-                            Text("${_sl_min.toStringAsFixed(2)} -- ${_sl_max.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
+                            Text("${pitchStats['SL']!['min']!.toStringAsFixed(2)} -- ${pitchStats['SL']!['max']!.toStringAsFixed(2)}", style: TextStyle(fontSize: 15)),
 
                             Text(''),
                             
-                            Text("In 0-0 Counts: $_start"),
+                            Text("In 0-0 Counts: ${countCounts['start']}"),
                             Text("1-0: ${_start2ball.toStringAsFixed(2)}%, 0-1: ${_start2strike.toStringAsFixed(2)}%"),
 
-                            Text("In 1-0 Counts: $_1b0s"),
+                            Text("In 1-0 Counts: ${countCounts['1b0s']}"),
                             Text("2-0: ${_1ball2ball.toStringAsFixed(2)}%, 1-1: ${_1ball2strike.toStringAsFixed(2)}%"),
 
-                            Text("In 0-1 Counts: $_0b1s"),
+                            Text("In 0-1 Counts: ${countCounts['0b1s']}"),
                             Text("1-1: ${_1strike2ball.toStringAsFixed(2)}%, 0-2: ${_1strike2strike.toStringAsFixed(2)}%"),
 
-                            Text("In 1-1 Counts: $_even"),
+                            Text("In 1-1 Counts: ${countCounts['_even']}"),
                             Text("2-1: ${_even2ball.toStringAsFixed(2)}%, 1-2: ${_even2strike.toStringAsFixed(2)}%"),
 
                           ]
