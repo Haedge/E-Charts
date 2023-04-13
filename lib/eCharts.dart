@@ -80,6 +80,9 @@ class eCharts extends State<HomePage> {
     'stb' : 0, 'sts' : 0,
     '1btb' : 0, '1bts' : 0,
     '1stb' : 0, '1sts' : 0,
+
+    '1b1sts' : 0, '1b1stb' : 0,
+
   };
 
   Map<String, double> countPercent = {
@@ -177,13 +180,13 @@ class eCharts extends State<HomePage> {
     _currentPitcher = " ";
     _currentTeam = ' ';
     _cPitchLocations = [];
-    _numHBP = 0; _numHits = 0; _numKs = 0; _numWalks = 0; _pitch_count = 0;
-    _strikePercentage = 0;
-    _fb_avg = 0; _fb_min = 0; _fb_max = 0;
-    _ch_avg = 0; _ch_min = 0; _ch_max = 0;
-    _cb_avg = 0; _cb_min = 0; _cb_max = 0;
-    _sl_avg = 0; _sl_min = 0; _sl_max = 0;
-    _fbSP = 0; _cbSP = 0; _chSP = 0; _slSP = 0; // Strike Percentage
+
+    for(String entry in pitchChoices){
+      pitchStats[entry]!.forEach((key, value) => pitchStats[entry]![key] = 0);
+    }
+
+    cExtras.forEach((key, value) => cExtras[key] = 0);
+    
     _calculateCountPerc([]);
     setState(() {});
     current_count = Tuple2<int,int> (0,0);
@@ -225,14 +228,6 @@ class eCharts extends State<HomePage> {
   }
 
   _calculateCountPerc(List<Pitch> pitches){
-
-    _stb = 0; _sts = 0; 
-    _1bts = 0; _1btb = 0;
-    _1stb = 0; _1sts = 0;
-    _start = 0; _1b0s = 0;
-    _0b1s = 0; 
-    _1b1sts = 0; _1b1stb = 0;
-    _even = 0;
     int totps = pitches.length;
 
     countCounts.forEach((key, value) {countCounts[key] = 0;});
@@ -240,90 +235,64 @@ class eCharts extends State<HomePage> {
     for(Pitch pitch in pitches){
       if(pitch.oldCount == Tuple2<int,int> (0,0)){
         if(pitch.strike){
-          _sts += 1;
           countCounts['sts'] = countCounts['sts']! + 1;
         } else {
-          _stb += 1;
           countCounts['stb'] = countCounts['stb']! + 1;
         }
-        _start += 1;
         countCounts['start'] = countCounts['start']! + 1;
 
       } else if(pitch.oldCount == Tuple2<int,int> (1,0)){
         if(pitch.strike){
-          _1bts += 1;
           countCounts['1bts'] = countCounts['1bts']! + 1;
         } else {
-          _1btb += 1;
           countCounts['1btb'] = countCounts['1btb']! + 1;
         }
-        _1b0s += 1;
         countCounts['1b0s'] = countCounts['1b0s']! + 1;
 
       } else if(pitch.oldCount == Tuple2<int,int> (0,1)){
         if(pitch.strike){
-          _1sts += 1;
           countCounts['1sts'] = countCounts['1sts']! + 1;
         } else {
-          _1stb += 1;
           countCounts['1stb'] = countCounts['1stb']! + 1;
         }
-        _0b1s += 1;
         countCounts['0b1s'] = countCounts['0b1s']! + 1;
+
       } else if(pitch.oldCount == Tuple2<int,int> (1,1)){
         if(pitch.strike){
-          _1b1sts += 1;
-          countCounts['1bsts'] = countCounts['1bsts']! + 1;
+          countCounts['1b1sts'] = countCounts['1b1sts']! + 1;
         } else {
-          _1b1stb += 1;
           countCounts['1b1stb'] = countCounts['1b1stb']! + 1;
         }
-        _even += 1;
         countCounts['even'] = countCounts['even']! + 1;
       }
     }
-
-    _start2ball = 0; _start2strike = 0;
-    _1ball2ball = 0; _1ball2strike = 0;
-    _1strike2ball = 0; _1strike2strike = 0;
-    _even2ball = 0; _even2strike = 0;
 
     countPercent.forEach((key, value) {countPercent[key] = 0;});
 
     if(totps > 0){
       int? start = countCounts['start'];
-      _start2ball = (_stb / _start) * 100;
-      _start2strike = (_sts / _start) * 100; 
       countPercent['start2ball'] = (countCounts['stb']! / start!) * 100; // 0-0 -> 1-0
       countPercent['start2strike'] = (countCounts['sts']! / start) * 100; // 0-0 -> 0-1
 
-      if(_1b0s > 0){
-        int? ball0s = countCounts['1b0s']; 
-        _1ball2ball = (_1btb / _1b0s) * 100; // 1-0 -> 2-0
-        _1ball2strike = (_1bts / _1b0s) * 100;
-        countPercent['1ball2ball'] = (countCounts['1btb']! / ball0s!) * 100;
-        countPercent['1ball2strike'] = (countCounts['1bts']! / ball0s) * 100;
+      if(countCounts['1b0s']! > 0){
+        int? ball0s = countCounts['1b0s'];
+        countPercent['1ball2ball'] = (countCounts['1btb']! / ball0s!) * 100; // 1-0 -> 2-0
+        countPercent['1ball2strike'] = (countCounts['1bts']! / ball0s) * 100; // 1-0 -> 1-1
         
-        if(_even > 0){
+        if(countCounts['even']! > 0){
           int? even = countCounts['even'];
-          _even2ball = (_1b1stb / _even) * 100; // 1-1 -> 2-1
-          _even2strike = (_1b1sts / _even) * 100; // 1-1 -> 1-2
-          countPercent['even2ball'] = (countCounts['1b1stb']! / even!) * 100;
-          countPercent['even2strike'] = (countCounts['1b1sts']! / even) * 100;
+          countPercent['even2ball'] = (countCounts['1b1stb']! / even!) * 100; // 1-1 -> 2-1
+          countPercent['even2strike'] = (countCounts['1b1sts']! / even) * 100; // 1-1 -> 1-2
         } // 1-0 -> 1-1
       }
-      if (_0b1s > 0){
+      if (countCounts['0b1s']! > 0){
         int? s2ball = countCounts['0b1s'];
-        _1strike2ball = (_1stb / _0b1s) * 100; // 0-1 -> 1-1
-        _1strike2strike = (_1sts / _0b1s) * 100; // 0-1 -> 0-2
-        countPercent['1strike2ball'] = (countCounts['1stb']! / s2ball!);
-        countPercent['1strike2strike'] = (countCounts['1sts']! / s2ball);
+        countPercent['1strike2ball'] = (countCounts['1stb']! / s2ball!); // 0-1 -> 1-1
+        countPercent['1strike2strike'] = (countCounts['1sts']! / s2ball); // 0-1 -> 0-2
         if(_even > 0){
           int? even = countCounts['even'];
-          _even2ball = (_1b1stb / _even) * 100; // 1-1 -> 2-1
-          _even2strike = (_1b1sts / _even) * 100; // 1-1 -> 1-2
-          countPercent['even2ball'] = (countCounts['1b1stb']! / even!) * 100;
-          countPercent['eventstrike'] = (countCounts['1b1sts']! / even) * 100;
+          countPercent['even2ball'] = (countCounts['1b1stb']! / even!) * 100; // 1-1 -> 2-1
+          countPercent['eventstrike'] = (countCounts['1b1sts']! / even) * 100; // 1-1 -> 1-2
         }
       }
     }
@@ -364,28 +333,6 @@ class eCharts extends State<HomePage> {
 
   //Updates ranges, averages, and count
   _calculateInfo(List<Pitch> pitches){
-    int fb_count = 0; int fb_speed_tot = 0; 
-    List<int> fb_speeds = []; int fb_strikes = 0;
-    int fb_tot = 0;
-
-    int ch_count = 0; int ch_speed_tot = 0;
-    List<int> ch_speeds = []; int ch_strikes = 0;
-    int ch_tot = 0;
-
-    int cb_count = 0; int cb_speed_tot = 0;
-    List<int> cb_speeds = []; int cb_strikes = 0;
-    int cb_tot = 0;
-
-    int sl_count = 0; int sl_speed_tot = 0;
-    List<int> sl_speeds = []; int sl_strikes = 0; 
-    int sl_tot = 0;
-
-    int strike_count = 0;
-    _numHBP = 0; _numHits = 0;
-    _numKs = 0; _numWalks = 0;
-
-      // count for avg, total speed, num strikes, total thrown
-
     final Map<String, Map<String, dynamic>> cInf = {};
     cExtras.forEach((key, value) => cExtras[key] = 0);
     
@@ -400,73 +347,27 @@ class eCharts extends State<HomePage> {
 
     //Goes through all pitches in the pitch array
     for(Pitch entry in pitches){
-      if(entry.type != null){
-        String p_type = entry.type;
-        int p_spd = entry.speed;
-        bool p_strike = entry.strike;
+      String p_type = entry.type;
+      int p_spd = entry.speed;
+      bool p_strike = entry.strike;
 
-        p_strike ? {
-          cInf[p_type]!['strike'] += 1,
-          cExtras['strike_count'] = cExtras['strike_count']! + 1,
-        } : 0;
-        cInf[p_type]!['tot'] += 1;
+      p_strike ? {
+        cInf[p_type]!['strike'] += 1,
+        cExtras['strike_count'] = cExtras['strike_count']! + 1,
+      } : 0;
+      cInf[p_type]!['tot'] += 1;
 
-        p_spd != 0 ? {
-          cInf[p_type]!['count'] += 1,
-          cInf[p_type]!['spdTot'] += p_spd,
-          cInf[p_type]!['speeds'].add(p_spd)
-        } : 0;
+      p_spd != 0 ? {
+        cInf[p_type]!['count'] += 1,
+        cInf[p_type]!['spdTot'] += p_spd,
+        cInf[p_type]!['speeds'].add(p_spd)
+      } : 0;
 
-        entry.bb ? cExtras['numWalks'] = cExtras['numWalks']! + 1 : 0;
-        entry.hbp ? cExtras['numHBP'] = cExtras['numHBP']! + 1 : 0;
-        entry.k_looking || entry.k_swinging ? cExtras['numKs'] = cExtras['numKs']! + 1 : 0;
-        entry.hit ? cExtras['numHits'] = cExtras['numHits']! + 1 : 0;
-        cExtras['pitch_count'] = cExtras['pitch_count']! +  1;
-
-        //Gathers pitch information based on type
-        if(p_type == "FB"){
-          p_strike ? fb_strikes += 1 : fb_strikes;
-          fb_tot += 1;
-          if(p_spd != 0){
-            fb_count += 1;
-            fb_speed_tot += p_spd;
-            fb_speeds.add(p_spd);
-          }
-        }else if(p_type == "CH"){
-          p_strike ? ch_strikes += 1 : ch_strikes;
-          ch_tot += 1;
-          if(p_spd != 0){
-            ch_count += 1;
-            ch_speed_tot += p_spd;
-            ch_speeds.add(p_spd);
-          }
-        }else if(p_type == "CB"){
-          p_strike ? cb_strikes += 1 : cb_strikes;
-          cb_tot += 1;
-          if(p_spd != 0){
-            cb_count += 1;
-            cb_speed_tot += p_spd;
-            cb_speeds.add(p_spd);
-          }
-        } else if(p_type == "SL"){
-          p_strike ? sl_strikes += 1 : sl_strikes;
-          sl_tot += 1;
-          if(p_spd != 0){
-            sl_count += 1;
-            sl_speed_tot += p_spd;
-            sl_speeds.add(p_spd);
-          }
-        }
-
-        if(p_strike){
-          strike_count += 1;
-        }
-
-        if(entry.bb){_numWalks += 1;}
-        if(entry.hbp){_numHBP += 1;}
-        if(entry.k_looking || entry.k_swinging){_numKs += 1;}
-        if(entry.hit){_numHits += 1;}
-      }
+      entry.bb ? cExtras['numWalks'] = cExtras['numWalks']! + 1 : 0;
+      entry.hbp ? cExtras['numHBP'] = cExtras['numHBP']! + 1 : 0;
+      entry.k_looking || entry.k_swinging ? cExtras['numKs'] = cExtras['numKs']! + 1 : 0;
+      entry.hit ? cExtras['numHits'] = cExtras['numHits']! + 1 : 0;
+      cExtras['pitch_count'] = cExtras['pitch_count']! +  1;
     }
 
     //Updates and calculates the values for the widgets
@@ -501,7 +402,7 @@ class eCharts extends State<HomePage> {
         cExtras['strikeP'] = 0;
         current_count = Tuple2<int,int> (0,0);
       }else{
-        _strikePercentage = (strike_count / _pitch_count) * 100;
+        _strikePercentage = (cExtras['strike_count']! / _pitch_count) * 100;
         cExtras['strikeP'] = (cExtras['strike_count']! / _pitch_count) * 100;
       }
 
@@ -509,58 +410,6 @@ class eCharts extends State<HomePage> {
       cInf;
 
       // fb_tot != 0 ? _fbSP = (fb_strikes / fb_tot) * 100 : _fbSP = 0;
-      if(fb_count != 0){
-        _fb_avg = fb_speed_tot / fb_count;
-        _fb_min = fb_speeds.reduce(min);
-        _fb_max = fb_speeds.reduce(max);
-      } else {
-        _fb_avg = 0; _fb_min = 0; _fb_max = 0;
-      }
-
-      ch_tot != 0 ? _chSP = (ch_strikes / ch_tot) * 100 : _chSP = 0;
-      if(ch_count != 0){
-        _ch_avg = ch_speed_tot / ch_count;
-        _ch_min = ch_speeds.reduce(min);
-        _ch_max = ch_speeds.reduce(max);
-        _chSP = (ch_strikes / ch_tot) * 100;
-      } else {
-        _ch_avg = 0; _ch_min = 0; _ch_max = 0;
-      }
-
-      cb_tot != 0 ? _cbSP = (cb_strikes / cb_tot) * 100: _cbSP = 0;
-      if(cb_count != 0){
-        _cb_avg = cb_speed_tot / cb_count;
-        _cb_min = cb_speeds.reduce(min);
-        _cb_max = cb_speeds.reduce(max);
-        _cbSP = (cb_strikes / cb_tot) * 100;
-      } else {
-        _cb_avg = 0; _cb_min = 0; _cb_max = 0;
-      }
-
-      sl_tot != 0 ? _slSP = (sl_strikes / sl_tot) * 100: _slSP = 0;
-      if(sl_count != 0){
-        _sl_avg = sl_speed_tot / sl_count;
-        _sl_min = sl_speeds.reduce(min);
-        _sl_max = sl_speeds.reduce(max);
-        _slSP = (sl_strikes / sl_tot) * 100;
-      } else {
-        _sl_avg = 0; _sl_min = 0; _sl_max = 0;
-      }
-
-      _pitch_count = _currentPitches.length;
-      if(_pitch_count == 0){
-        _strikePercentage = 0;
-        current_count = Tuple2<int,int> (0,0);
-      }else{
-        _strikePercentage = (strike_count / _pitch_count) * 100;
-      }
-      _pitch_count;
-      _numHits;
-      _numKs;
-      _numWalks;
-      _numWalks;
-      _numHBP;
-      
     });
 
 
@@ -1158,12 +1007,12 @@ class eCharts extends State<HomePage> {
                         width: 200,
                         child: Column(
                           children: [
-                            Text("Pitch Count: ${cExtras['pitch_count']}", style: TextStyle(fontSize: 18)),
+                            Text("Pitch Count: ${cExtras['pitch_count']!.toInt()}", style: TextStyle(fontSize: 18)),
                             Text("Strike %: ${cExtras['strikeP']!.toStringAsFixed(0)}", style: TextStyle(fontSize: 18)),
-                            Text("Ks: ${cExtras['numKs']}", style: TextStyle(fontSize: 18)),
-                            Text("Hits: ${cExtras['numHits']}", style: TextStyle(fontSize: 18)),
-                            Text("BBs: ${cExtras['numWalks']}", style: TextStyle(fontSize: 18)),
-                            Text("HBPs: ${cExtras['numHBP']}", style: TextStyle(fontSize: 18))
+                            Text("Ks: ${cExtras['numKs']!.toInt()}", style: TextStyle(fontSize: 18)),
+                            Text("Hits: ${cExtras['numHits']!.toInt()}", style: TextStyle(fontSize: 18)),
+                            Text("BBs: ${cExtras['numWalks']!.toInt()}", style: TextStyle(fontSize: 18)),
+                            Text("HBPs: ${cExtras['numHBP']!.toInt()}", style: TextStyle(fontSize: 18))
                           ]
                         ),
                       ),
@@ -1202,16 +1051,16 @@ class eCharts extends State<HomePage> {
                             Text(''),
                             
                             Text("In 0-0 Counts: ${countCounts['start']}"),
-                            Text("1-0: ${_start2ball.toStringAsFixed(2)}%, 0-1: ${_start2strike.toStringAsFixed(2)}%"),
+                            Text("1-0: ${countPercent['start2ball']!.toStringAsFixed(2)}%, 0-1: ${countPercent['start2strike']!.toStringAsFixed(2)}%"),
 
                             Text("In 1-0 Counts: ${countCounts['1b0s']}"),
-                            Text("2-0: ${_1ball2ball.toStringAsFixed(2)}%, 1-1: ${_1ball2strike.toStringAsFixed(2)}%"),
+                            Text("2-0: ${countPercent['1ball2ball']!.toStringAsFixed(2)}%, 1-1: ${countPercent['1ball2strike']!.toStringAsFixed(2)}%"),
 
                             Text("In 0-1 Counts: ${countCounts['0b1s']}"),
-                            Text("1-1: ${_1strike2ball.toStringAsFixed(2)}%, 0-2: ${_1strike2strike.toStringAsFixed(2)}%"),
+                            Text("1-1: ${countPercent['1strike2ball']!.toStringAsFixed(2)}%, 0-2: ${countPercent['1strike2strike']!.toStringAsFixed(2)}%"),
 
-                            Text("In 1-1 Counts: ${countCounts['_even']}"),
-                            Text("2-1: ${_even2ball.toStringAsFixed(2)}%, 1-2: ${_even2strike.toStringAsFixed(2)}%"),
+                            Text("In 1-1 Counts: ${countCounts['even']}"),
+                            Text("2-1: ${countPercent['even2ball']!.toStringAsFixed(2)}%, 1-2: ${countPercent['even2strike']!.toStringAsFixed(2)}%"),
 
                           ]
                         ),
