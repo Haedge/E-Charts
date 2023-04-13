@@ -51,12 +51,6 @@ class eCharts extends State<HomePage> {
   List<Pitch> _displayPitches = [];
   List<Offset> _displayLocations = [];
   int _pitch_count = 0;
-  double _fb_avg = 0; int _fb_min = 0; int _fb_max = 0;
-  double _ch_avg = 0; int _ch_min = 0; int _ch_max = 0;
-  double _cb_avg = 0; int _cb_min = 0; int _cb_max = 0;
-  double _sl_avg = 0; int _sl_min = 0; int _sl_max = 0;
-  int _numHits = 0; int _numWalks = 0; int _numHBP = 0;
-  int _numKs = 0; double _strikePercentage = 0;
 
   final List<String> pitchChoices = ['FB', 'CH', 'CB', 'SL'];
 
@@ -398,11 +392,9 @@ class eCharts extends State<HomePage> {
 
       _pitch_count = _currentPitches.length;
       if(_pitch_count == 0){
-        _strikePercentage = 0;
         cExtras['strikeP'] = 0;
         current_count = Tuple2<int,int> (0,0);
       }else{
-        _strikePercentage = (cExtras['strike_count']! / _pitch_count) * 100;
         cExtras['strikeP'] = (cExtras['strike_count']! / _pitch_count) * 100;
       }
 
@@ -450,6 +442,39 @@ class eCharts extends State<HomePage> {
     setState(() {});
     _pitcherRemove = " ";
     _currentPitcher = " ";
+  }
+
+  _pitchInsight(Pitch pitch, context, List<Pitch> pitches){
+      showDialog(
+        context: context,
+        builder: (BuildContext context){
+          return AlertDialog(
+            title: const Text('Pitch Information'),
+            content: SizedBox(
+              height: 150,
+              width: 300,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('\u2022 Pitch #: ${pitches.indexOf(pitch) + 1}'),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0),
+                    child: Text("\u2022 Pitch: ${pitch.type}, Speed: ${pitch.speed}")
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text("\u2022 ${pitch.strike ? "Strike, ${pitch.foul ? "Fouled" : pitch.k_looking || pitch.k_swinging ? "Strikeout" : 
+                    (pitch.swing ? (pitch.hit ? "Hit" : "Swung") : "Looking")}" :
+                    "Ball${pitch.bb || pitch.hbp ? ", Walk" : ""}"}"),
+                  ),
+                  Text("\u2022 Count Thrown in: ${pitch.oldCount}")
+
+                ],
+              )
+            ),
+          );
+        }
+      );
   }
 
 //The Program
@@ -960,27 +985,23 @@ class eCharts extends State<HomePage> {
                           );
                           }
                         );
+                      } else if (current_mode == "Viewing"){
+                        for (Pitch entry in _currentPitches){
+                          if(entry.getArea().contains(details.localPosition)){
+                            _pitchInsight(entry, context, _currentPitches);
+                          }
+                      }
                       }
                       
                     
                     },
+
                     child: RepaintBoundary(
                       child: DottedBorder(
                         color: Colors.black,
                         dashPattern: const [1, 3],
                         strokeWidth: 4,
-                          child: current_mode == "Viewing" ?
-                          CanvasTouchDetector(
-                            builder: (context) => CustomPaint(
-                              painter: paintPitch(_currentPitches, context, current_mode),
-                              child: Container(
-                                color: Colors.transparent,
-                                height: 500,
-                                width: 460,
-                              ),
-                            ),
-                          )
-                          :
+                          child: 
                           CustomPaint(
                             painter: paintPitch(_currentPitches, context, current_mode),
                             child: Container(

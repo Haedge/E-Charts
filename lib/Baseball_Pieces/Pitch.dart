@@ -20,6 +20,8 @@ class Pitch{
   Tuple2<int, int> oldCount = Tuple2<int,int>(0,0);
   int strikes = 0;
   int balls = 0;
+  Offset ar = const Offset(0, 0);
+  Offset ar2 = const Offset(0, 0);
 
   Pitch(String type, int speed, bool strike, bool swing, bool hit, bool k_looking, bool k_swinging, bool hbp,
         bool bb, Offset location, bool in_zone, Tuple2<int,int> oldCount, bool foul, bool bip){
@@ -47,5 +49,23 @@ class Pitch{
     return oldCount.item2;
   }
 
+  getArea(){
+    if(type == "FB"){
+      ar = Offset(location.dx + 6, location.dy + 6);
+      ar2 = Offset(location.dx - 6, location.dy - 6);
+    } else if (type == "CB"){
+      ar = Offset(location.dx + 4, location.dy + 4);
+      ar2 = Offset(location.dx - 4, location.dy - 4);
+    } else if (type == "CH"){
+      ar = Offset(location.dx + 4, location.dy + 4);
+      ar2 = Offset(location.dx - 4, location.dy - 4);
+    }else if(type == 'SL'){
+      ar = Offset(location.dx + 4, location.dy + 3);
+      ar2 = Offset(location.dx - 4, location.dy - 3);
+    }
+
+    Rect area = Rect.fromPoints(ar, ar2);
+    return(area);
+  }
 
 }

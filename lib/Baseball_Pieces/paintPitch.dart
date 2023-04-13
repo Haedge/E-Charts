@@ -11,43 +11,13 @@ class paintPitch extends CustomPainter{
   String mode;
   paintPitch(this.pitches, this.context, this.mode);
   
-  _pitchInsight(Pitch pitch){
-    showDialog(
-      context: context,
-      builder: (BuildContext context){
-        return AlertDialog(
-          title: const Text('Pitch Information'),
-          content: SizedBox(
-            height: 100,
-            width: 300,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('\u2022 Pitch #: ${pitches.indexOf(pitch) + 1}'),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text("\u2022 ${pitch.strike ? "Strike, ${pitch.foul ? "Fouled" : pitch.k_looking || pitch.k_swinging ? "Strikeout" : 
-                  (pitch.swing ? (pitch.hit ? "Hit" : "Swung") : "Looking")}" :
-                  "Ball${pitch.bb || pitch.hbp ? ", Walk" : ""}"}"),
-                ),
-                Text("\u2022 Count Thrown in: ${pitch.oldCount}")
-
-              ],
-            )
-          ),
-        );
-      }
-    );
-  }
-
-
 
   @override
   void paint(Canvas canvas, Size size){
     Canvas myCanvas = canvas;
         
-    if(mode == "Charting"){
-      Canvas myCanvas =  canvas;
+    //if(mode == "Charting"){
+      
       for(Pitch pitch in pitches){
 
       Color? pitchc = Colors.black;
@@ -106,10 +76,10 @@ class paintPitch extends CustomPainter{
         myCanvas.drawPath(sl, paint);
       }
 
-    }
+    //}
 
   
-    } else {
+    } /*else {
       
       TouchyCanvas myCanvas =  TouchyCanvas(context, canvas);
       for(Pitch pitch in pitches){
@@ -172,7 +142,7 @@ class paintPitch extends CustomPainter{
         }
 
       }
-      }
+      }*/
     }
 
 
