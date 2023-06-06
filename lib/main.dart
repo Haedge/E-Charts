@@ -5,6 +5,8 @@ import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:my_app/HomePage.dart';
 
+import 'Baseball_Pieces/PitchWidget.dart';
+
 void main(){
   WidgetsFlutterBinding.ensureInitialized();
   runApp(eCharts());
@@ -14,6 +16,7 @@ class eCharts extends StatelessWidget {
   const eCharts({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    PitchWidget? pitchWidget;
     return MaterialApp(
       home: const HomePage(title: 'Chart App'),
     );

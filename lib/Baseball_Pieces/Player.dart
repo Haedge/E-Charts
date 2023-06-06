@@ -8,40 +8,20 @@ import 'package:my_app/GameInstance.dart';
 
 class Player{
   String name;
-  List<Pitch> total_pitches = [];
   List<Pitch> unsaved_pitches = [];
-  List<Pitch> pitch_locations = [];
-  List<Pitch> pitches_requested = [];
   List<GameInstance> games = [];
+
+  List<Pitch> total_staple = [];
+  List<Pitch> total_dynamic = [];
+  List<Pitch> displayPitches = [];
+
   //DatabaseReference _id = "" as DatabaseReference;
 
   //Input only being pitcher name and pitch?
   Player(this.name);
 
   void addGame(GameInstance game){
-    GameInstance new_game = GameInstance(game.pitches, game.pitcher, game.team, game.mm, game.dd);
-    games.add(game);
-    total_pitches.addAll(new_game.pitches.toList());
-  }
-
-  getCertPitches(String type){
-    pitches_requested = [];
-    /*
-    if(games.isNotEmpty){
-      for(var game in games){
-        for(var pitch in game.pitches){
-          if(pitch.type == type){
-            certPitches.add(pitch);
-          }
-        }
-      }
-    }
-    */
-    for(var pitch in total_pitches){
-      if(pitch.type == type){
-        pitches_requested.add(pitch);
-      }
-    }
+      games.add(game);
   }
 
   // void setId(DatabaseReference id){

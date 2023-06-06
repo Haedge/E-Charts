@@ -23,29 +23,14 @@ class Pitch{
   Offset ar = const Offset(0, 0);
   Offset ar2 = const Offset(0, 0);
 
-  Pitch(String type, int speed, bool strike, bool swing, bool hit, bool k_looking, bool k_swinging, bool hbp,
-        bool bb, Offset location, bool in_zone, Tuple2<int,int> oldCount, bool foul, bool bip){
-    this.type = type;
-    this.speed = speed;
-    this.strike = strike;
-    this.swing = swing;
-    this.hit = hit;
-    this.k_looking = k_looking;
-    this.k_swinging = k_swinging;
-    this.hbp = hbp;
-    this.bb = bb;
-    this.location = location;
-    this.in_zone = in_zone;
-    this.oldCount = oldCount;
-    this.foul = foul;
-    this.bip = bip;
-  }
+  Pitch(this.type, this.speed, this.strike, this.swing, this.hit, this.k_looking, this.k_swinging, this.hbp,
+        this.bb, this.in_zone, this.foul, this.bip, this.location, this.oldCount);
 
-  _cBalls(){
+  cBalls(){
     return oldCount.item1;
   }
 
-  _cStrikes(){
+  cStrikes(){
     return oldCount.item2;
   }
 
@@ -66,6 +51,25 @@ class Pitch{
 
     Rect area = Rect.fromPoints(ar, ar2);
     return(area);
+  }
+
+  factory Pitch.fromMap(Map <String, dynamic> pdata){
+    return Pitch(
+      pdata['type'],
+      pdata['spd'],
+      pdata['strike'],
+      pdata['swing'],
+      pdata['hit'],
+      pdata['K'],
+      pdata['ꓘ'],
+      pdata['hbp'],
+      pdata['bb'],
+      pdata['in_zone'],
+      pdata['foul'],
+      pdata['bip'],
+      Offset(pdata['loc_x'], pdata['loc_y']),
+      Tuple2(pdata['oldCountBalls'], pdata['oldCountStrikes']),
+    );
   }
 
 }

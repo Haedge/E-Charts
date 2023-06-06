@@ -7,11 +7,30 @@ import 'package:my_app/Baseball_Pieces/Player.dart';
 class GameInstance {
 
   List<Pitch> pitches = [];
-  Player pitcher;
-  String team;
-  String mm;
-  String dd;
+  String pitcher = ' ';
+  String team = ' ';
+  String opponent = ' ';
+  String mm = ' ';
+  String dd = ' ';
+  Key id = UniqueKey();
+  dynamic gNum;
 
-  GameInstance(this.pitches, this.pitcher, this.team, this.mm, this.dd);
-  
+  GameInstance(this.pitches, this.pitcher, this.team, this.opponent, this.mm, this.dd, this.gNum);
+
+  factory GameInstance.fromMap(Map <String, dynamic> gdata){
+    return GameInstance(
+      (gdata['pitches'] as List<dynamic>).cast<Pitch>(),
+      gdata['pitcher'],
+      gdata['team'],
+      gdata['opponent'],
+      gdata['mm'],
+      gdata['dd'],
+      gdata['gNum'],
+    );
+  }
+
+  String getDisplayText(){
+    return '$team $mm/$dd $gNum';
+  }
+
 }
