@@ -33,4 +33,27 @@ class GameInstance {
     return '$team $mm/$dd $gNum';
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'pitches': pitches.map((pitch) => pitch.toJson()).toList(),
+      'pitcher': pitcher,
+      'team': team,
+      'opponent': opponent,
+      'mm': mm,
+      'dd': dd,
+      'gNum': gNum,
+    };
+  }
+
+  factory GameInstance.fromJson(Map<String, dynamic> json){
+    return GameInstance(
+      json['pitches'],
+      json['pitcher'],
+      json['team'],
+      json['opponent'],
+      json['mm'],
+      json['dd'],
+      json['gNum'],
+    );
+  }
 }

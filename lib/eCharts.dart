@@ -1,5 +1,6 @@
 // ignore_for_file: unnecessary_new, prefer_final_fields, unused_field, camel_case_types, avoid_print, sized_box_for_whitespace, prefer_initializing_formals, non_constant_identifier_names, unused_local_variable, constant_identifier_names, file_names
 
+import 'dart:async';
 import 'dart:core';
 import 'dart:math';
 
@@ -21,11 +22,18 @@ import 'package:multiselect/multiselect.dart';
 import 'package:tuple/tuple.dart';
 // import 'package:touchable/touchable.dart';
 import 'DellySkelly.dart';
-// import 'package:firebase_core/firebase_core.dart';
-// import 'firebase_options.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+
+
 String current_mode = "Charting";
+
+final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
 const PTypes = <Widget>[
   Text('Fastball'),
@@ -49,9 +57,6 @@ const List<String> PActionsList = ['Swing', 'Foul', 'Hit', 'BB', 'HBP', 'K', 'ê“
 
 
 class eCharts extends State<HomePage> {
-
-  
-
   List<Pitch> _currentPitches = [];
   List<Offset> _cPitchLocations = [];
   List<Pitch> _displayPitches = [];
@@ -102,17 +107,18 @@ class eCharts extends State<HomePage> {
 
 
 
-  Color? modeColor = Colors.blue[600];
+  Color? modeColor = Colors.black;
   Tuple2<int,int> current_count = const Tuple2<int,int> (0,0);
   
   final GlobalKey<State<StatefulWidget>> _printKey = GlobalKey();
-  final List<String> _Pitchers = [' ', 'Andrei Stoyanow', 'Bobby Fowler', 'Cade McWilliams', 'Connor Stack', 'David Blackburn',
-                                  'Ethan Thomas', 'Gunner Hopkins', 'Hogan Ralston', 'Jack Hodgins', 'Jackson Corrigan', 'Jacob Wagner', 'John Henry Fowler', 
-                                  'John Schaller', 'Johnny Miles', 'Kyle Poissoit', 'Miles Schluterman', 'Nathan Silva', 'Patrick Chastain', 
-                                  'Ryan da best eva Torres', 'Teddy Olander', 'Tyler Meek', 'Aiden Leggit', 'Brax Waller', 'Bryson Bales', 'Caleb Ougel',
-                                  'Chance Reed', 'Chase Nials', 'JD Nichols', 'Kyler Oathout', 'Matthew Mitchell', 'Miko Djuric', 'Nate Hirsh',
-                                  'Nic Luna', 'Sam Collier', 'Trent Jordan', 'Tucker Isbell', 'William Kuebler', 'Wyatt Goodman', 'Zane Nolan',
-                                  'Ian Guthrie', 'Test Pitcher'];
+  late List<String> _Pitchers = []; // 'Andrei Stoyanow', 'Bobby Fowler', 'Cade McWilliams', 'Connor Stack', 'David Blackburn',
+                                  // 'Ethan Thomas', 'Gunner Hopkins', 'Hogan Ralston', 'Jack Hodgins', 'Jackson Corrigan', 'Jacob Wagner', 'John Henry Fowler', 
+                                  // 'John Schaller', 'Johnny Miles', 'Kyle Poissoit', 'Miles Schluterman', 'Nathan Silva', 'Patrick Chastain', 
+                                  // 'Ryan da best eva Torres', 'Teddy Olander', 'Tyler Meek', 'Aiden Leggit', 'Brax Waller', 'Bryson Bales', 'Caleb Ougel',
+                                  // 'Chance Reed', 'Chase Nials', 'JD Nichols', 'Kyler Oathout', 'Matthew Mitchell', 'Miko Djuric', 'Nate Hirsh',
+                                  // 'Nic Luna', 'Sam Collier', 'Trent Jordan', 'Tucker Isbell', 'William Kuebler', 'Wyatt Goodman', 'Zane Nolan',
+                                  // 'Ian Guthrie', 'Test Pitcher'];
+  late List<Player> p_pitchers;
   
   List<GameInstance> _pitcherGamesG = [];
   List<String> _pitcherGamesS = ['FB', 'CB', 'CH', 'SL'];
@@ -170,7 +176,7 @@ class eCharts extends State<HomePage> {
 
   _reset(String pitcher){
     _pitchPlayer[_Pitchers.indexOf(pitcher)].total_dynamic = [];
-    _pitchPlayer[_Pitchers.indexOf(pitcher)].total_staple = [];
+    _pitchPlayer[_Pitchers.indexOf(pitcher)].unsaved_pitches = [];
     _currentPitcher = " ";
     _currentTeam = ' ';
     _cPitchLocations = [];
@@ -265,12 +271,15 @@ class eCharts extends State<HomePage> {
 
 // TODO: Make sure to include dynamic if idea works
   _undoPitch(String pitcher){
-    List<Pitch> pitches = _findPitcher(_currentPitcher).unsaved_pitches;
-    if (pitches.isNotEmpty){
-      pitches.removeLast();
-      _cPitchLocations.removeLast();
-      _calcCombo(_findPitcher(pitcher).unsaved_pitches);
-      setState(() {});
+    Player p = _findPitcher(_currentPitcher);
+    if(current_mode == 'Charting'){
+      if (p.unsaved_pitches.isNotEmpty){
+        p.unsaved_pitches.removeLast();
+        p.total_staple.removeLast();
+        p.displayPitches.removeLast();
+        _calcCombo(_findPitcher(pitcher).unsaved_pitches);
+        setState(() {});
+      }
     }
   }
 
@@ -532,12 +541,13 @@ class eCharts extends State<HomePage> {
 
   _addPitch(Pitch pitch, String pitcher){
     Player p = _findPitcher(pitcher);
+    List<Pitch> pitches = [];
+    pitches.add(pitch);
 
     p.unsaved_pitches.add(pitch);
     p.displayPitches.add(pitch);
-    if (current_mode == "Charting") {
-      p.total_staple.add(pitch);
-    }
+    p.total_staple.add(pitch);
+    addPitchesToPitcher(_findPitcher(pitcher), pitches);
   }
 
   _pitchesRequested(List<String> specs, String pitcher, List<int> i_s){
@@ -665,20 +675,34 @@ class eCharts extends State<HomePage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Reset?'),
-          content: 
-          ButtonBar(
-            alignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                child: const Text('Confirm'),
-                onPressed: () => {
-                  _reset(_currentPitcher),
-                  Navigator.pop(context)
-                },
-              ),
-              ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel'))
-          ]
+          content:
+          SizedBox(
+            height: 150,
+            width: 400,
+            child: Column(
+              children: [
+                const Text(
+                  'This WILL reset the current unsaved pitches for',
+                  textAlign: TextAlign.center,
+                  ),
+                  Text(_currentPitcher),
+                ButtonBar(
+                  alignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      child: const Text('Confirm'),
+                      onPressed: () => {
+                        _reset(_currentPitcher),
+                        Navigator.pop(context)
+                      },
+                    ),
+                    ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel'))
+                ]
+                )
+              ],
+            )
           )
+          
           
         );
       }
@@ -746,7 +770,10 @@ class eCharts extends State<HomePage> {
                   ButtonBar(
                     alignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton(onPressed: () => {_addPitcher(pitcher_controller.text), Navigator.pop(context)}, child: const Text('Confirm')),
+                      ElevatedButton(onPressed: () => {
+                        if(pitcher_controller.text.isNotEmpty){
+                        createPlayer(pitcher_controller.text),
+                        Navigator.pop(context)}}, child: const Text('Confirm')),
                       ElevatedButton(onPressed: () => {Navigator.pop(context)}, child: const Text('Cancel'))
                     ]
                   ),
@@ -778,6 +805,111 @@ class eCharts extends State<HomePage> {
     );
   }
 
+
+
+  final DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
+  
+  final CollectionReference pitchersCollection = firestore.collection('players');
+
+
+void fetchData() {
+  pitchersCollection.get().then((QuerySnapshot<Map<String, dynamic>> snapshot) {
+    print(snapshot.docs);
+  } as FutureOr Function(QuerySnapshot<Object?> value));
+}
+
+
+void printValueType(Map<dynamic, dynamic> map) {
+  map.forEach((key, value) {
+    print('Key: $key, Value Type: ${value.runtimeType}');
+  });
+}
+
+Future<Tuple2<List<Player>, List<String>>> fetchPitchers() async {
+  final QuerySnapshot<Object?> querySnapshot = await pitchersCollection.get();
+  List<String> pnames = [];
+  List<Player> pitchers = [];
+  for(var player in querySnapshot.docs){
+    Map<String,dynamic> p = player.data() as Map<String,dynamic>;
+    Map<String, dynamic> pInfo = {};
+    for(var item in p.keys){
+      if(item == 'name'){
+        pInfo[item] = p[item];
+      } else if(item == 'id'){
+        pInfo[item] = p[item];
+      } else {
+        pInfo[item] = convertTypesForPitchers(item, p[item]);
+      }
+    }
+    pitchers.add(Player.fromJson(pInfo));
+    pnames.add(p['name']);
+  }
+
+  // print('${pitchers[0].name}, ${pitchers[0].id}');
+  return Tuple2<List<Player>, List<String>>(pitchers, pnames);
+}
+
+List convertTypesForPitchers(String key, List data){
+  List wanted = [];
+
+  if(key == 'games'){
+    if(data.isNotEmpty){
+      wanted = data.map((game) => GameInstance.fromJson(game)).toList();
+    } else {
+      wanted = <GameInstance> [];
+    }
+  } else {
+    if(data.isNotEmpty){
+      wanted = data.map((pitch) => Pitch.fromJson(pitch)).toList();
+    } else {
+      wanted = <Pitch> [];
+    }
+  }
+  return wanted;
+}
+
+Future<void> addPitcher(Player pitcher) async {
+  await pitchersCollection.add(pitcher.toJson());
+}
+
+Future<void> createPlayer(String name) async {
+  CollectionReference playersCollection = FirebaseFirestore.instance.collection('players');
+
+  DocumentReference newPlayerRef = playersCollection.doc();
+
+  Player player = Player(name);
+  player.id = newPlayerRef.id;
+
+  await newPlayerRef.set(player.toJson());
+}
+
+void addPitchesToPitcher(Player pitcher, List<Pitch> pitches) async {
+  pitcher.unsaved_pitches.addAll(pitches);
+
+  print('This is the pitchers id: ${pitcher.id}');
+  // Update the database with the new pitches
+  final DocumentReference playerRef = FirebaseFirestore.instance.collection('players').doc(pitcher.id);
+  print('Player ref id thing: $playerRef');
+  await playerRef.update({
+    'unsaved_pitches': FieldValue.arrayUnion(pitches.map((pitch) => pitch.toJson()).toList()),
+  });
+}
+
+List<Pitch> convertToPitch(List<dynamic> pitches){
+  List<Pitch> finale = [];
+  for(var item in pitches){
+    Pitch newPitch = Pitch.fromJson(item);
+    finale.add(newPitch);
+  }
+  return finale;
+}
+
+Future<void> removeFromDB(String playerId) async {
+  CollectionReference playersCollection = FirebaseFirestore.instance.collection('players');
+
+  await playersCollection.doc(playerId).delete();
+}
+
 //The Program
   @override
   Widget build(BuildContext context) {
@@ -790,7 +922,7 @@ class eCharts extends State<HomePage> {
     TextEditingController pitcher_controller = TextEditingController();
     late String selectedValue = 'testing';
 
-    List<Map> data = [
+    List<Map> settings = [
     {
       'name': 'Export',
       'icon': Icons.import_export,
@@ -828,13 +960,41 @@ class eCharts extends State<HomePage> {
     },
   ];
 
-    
-    
 
+    // Fetching data
+    fetchPitchers().then((tuple) {
+      // Do something with the fetched pitchers
+      List<Player> p_pitchers = tuple.item1;
+      setState(() {
+        if(_Pitchers.isEmpty){
+          _Pitchers.addAll(tuple.item2);
+          print('Adding pitchers');
+          print(_Pitchers);
+        } else if(_Pitchers != tuple.item2){
+          p_pitchers = tuple.item1;
+          _Pitchers = tuple.item2;
+        }
+      });
+    }).catchError((error) {
+      // Handle the error
+      print('Error fetching pitchers: $error');
+    });
 
-    if(_findPitcher('Test Pitcher').total_staple.length < 20){
-      _testingPitches(20);
-    }
+    // print(_findPitcher('Test Pitcher').name);
+    // if(_findPitcher('Test Pitcher').total_staple.length < 20){
+    //   print('I AM DOING TESTING');
+    //   _testingPitches(20);
+    // }
+ 
+    // Player ptest = _findPitcher('Test Pitcher');
+    // print('Here is the test unsaved: ${ptest.unsaved_pitches}');
+
+    // createPlayer('Test Pitcher').then((_) {
+    //   print('Test Pitcher added successfully');
+    //   addPitchesToPitcher(ptest, ptest.unsaved_pitches);
+    // }).catchError((error) {
+    //   print('Error adding Test Pitcher');
+    // });
     
 
     for(String pitcher in _Pitchers){
@@ -858,59 +1018,68 @@ class eCharts extends State<HomePage> {
                     image: DecorationImage(image: AssetImage("assets/images/new_Chart.png"),),
                 ),
               ),
-              
-              DropdownButtonHideUnderline(
-                  child: DropdownButton2(
-                    customButton: const Icon(
-                      Icons.list,
-                      size: 90,
-                      color: Color.fromARGB(255, 47, 50, 52),
-                    ),
-                    isExpanded: true,
-                    items: data
-                        .map((item) => DropdownMenuItem<String>(
-                              value: item['name'],
-                              child: Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: Icon(item['icon']),
-                                  ),
-                                  Text(
-                                    item['name'],
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ))
-                        .toList(),
-                    value: 'Export',
-                    onChanged: (value) {
-                      int index = (data.indexWhere((item) => item['name'] == value));
-                      if (index != -1) {
-                        final selectedFunction = data[index]['function'];
-                        selectedFunction();
-                      }
-                      setState(() {
-                        
-                      });
-                    },
-                    dropdownStyleData: DropdownStyleData(
-                      width: 300,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: Colors.white,
+              Padding(
+                padding: const EdgeInsets.only(top: 18.0),
+                child:
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.grey, 
+                        width: 2.0, 
                       ),
-                      elevation: 8,
-                      offset: const Offset(0, 8),
+                      shape: BoxShape.rectangle,
+                    ),
+                    child: 
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton2(
+                        customButton: const Icon(
+                          Icons.list,
+                          size: 80,
+                          color: Color.fromARGB(255, 47, 50, 52),
+                        ),
+                        isExpanded: true,
+                        items: settings
+                            .map((item) => DropdownMenuItem<String>(
+                                  value: item['name'],
+                                  child: Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(right: 8.0),
+                                        child: Icon(item['icon']),
+                                      ),
+                                      Text(
+                                        item['name'],
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ))
+                            .toList(),
+                        value: 'Export',
+                        onChanged: (value) {
+                          int index = (settings.indexWhere((item) => item['name'] == value));
+                          if (index != -1) {
+                            final selectedFunction = settings[index]['function'];
+                            selectedFunction();
+                          }
+                          setState(() {});
+                        },
+                        dropdownStyleData: DropdownStyleData(
+                          width: 300,
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                            color: Colors.white,
+                          ),
+                          elevation: 8,
+                          offset: const Offset(0, 8),
+                        ),
+                      ),
                     ),
                   ),
-                  
-                ),
-
+              ),
 
               //Pitcher Dropdown
               CustomSingleChildLayout(

@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/Baseball_Pieces/Pitch.dart';
 import 'package:my_app/GameInstance.dart';
-// import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 
 class Player{
@@ -15,7 +15,7 @@ class Player{
   List<Pitch> total_dynamic = [];
   List<Pitch> displayPitches = [];
 
-  //DatabaseReference _id = "" as DatabaseReference;
+  String id = "";
 
   //Input only being pitcher name and pitch?
   Player(this.name);
@@ -24,16 +24,45 @@ class Player{
       games.add(game);
   }
 
-  // void setId(DatabaseReference id){
-  //   this._id = id;
-  // }
+  void setId(String id){
+    this.id = id;
+  }
 
   Map<String, dynamic> toJson(){
     return {
-      'pitcher' : this.name,
-      'games' : this.games,
+      'name' : this.name,
+      'id' : this.id,
+      'unsaved_pitches' : this.unsaved_pitches.map((pitch) => pitch.toJson()).toList(),
+      'games' : this.games.map((game) => game.toJson()).toList(),
+      'total_staple': this.total_staple.map((pitch) => pitch.toJson()).toList(),
+      'total_dynamic': this.total_dynamic.map((pitch) => pitch.toJson()).toList(),
+      'displayPitches': this.displayPitches.map((pitch) => pitch.toJson()).toList(),
     };
   }
 
+  factory Player.fromMap(Map<String, dynamic> playerData) {
+    return Player(
+      playerData['pitcher'],
+    )..games = List<GameInstance>.from(playerData['games'].map((gameData) => GameInstance.fromMap(gameData)));
+  }
+
+  List<Pitch> convertToPitch(List<dynamic> pitches){
+    List<Pitch> finale = [];
+    for(var item in pitches){
+      Pitch newPitch = Pitch.fromJson(item);
+      finale.add(newPitch);
+    }
+    return finale;
+  }
+
+  factory Player.fromJson(Map<String, dynamic> pData){
+    Player pitcher = Player(pData['name']);
+    pitcher.name = pData['name'];
+    pitcher.id = pData['id'];
+    pitcher.unsaved_pitches = pData['unsaved_pitches'];
+    pitcher.games = pData['games'];
+    pitcher.total_staple = pData['total_staple'];
+    return(pitcher);
+  }
 }
 
