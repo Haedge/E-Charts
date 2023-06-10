@@ -62,6 +62,7 @@ class Player{
     pitcher.unsaved_pitches = pData['unsaved_pitches'];
     pitcher.games = pData['games'];
     pitcher.total_staple = pData['total_staple'];
+    pitcher.displayPitches = pData['displayPitches'];
     return(pitcher);
   }
 }

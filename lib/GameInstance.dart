@@ -46,14 +46,15 @@ class GameInstance {
   }
 
   factory GameInstance.fromJson(Map<String, dynamic> json){
-    return GameInstance(
-      json['pitches'],
-      json['pitcher'],
-      json['team'],
-      json['opponent'],
-      json['mm'],
-      json['dd'],
-      json['gNum'],
-    );
+    GameInstance game = GameInstance([],"","","","","","");
+    List<dynamic> t = json['pitches'];
+    game.pitches = t.map((pitch) => Pitch.fromJson(pitch)).toList().cast<Pitch>();
+    game.pitcher = json['pitcher'];
+    game.team = json['team'];
+    game.opponent = json['opponent'];
+    game.mm = json['mm'];
+    game.dd = json['dd'];
+    game.gNum = json['gNum'];
+    return game;
   }
 }

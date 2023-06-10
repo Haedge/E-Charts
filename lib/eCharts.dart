@@ -118,7 +118,7 @@ class eCharts extends State<HomePage> {
                                   // 'Chance Reed', 'Chase Nials', 'JD Nichols', 'Kyler Oathout', 'Matthew Mitchell', 'Miko Djuric', 'Nate Hirsh',
                                   // 'Nic Luna', 'Sam Collier', 'Trent Jordan', 'Tucker Isbell', 'William Kuebler', 'Wyatt Goodman', 'Zane Nolan',
                                   // 'Ian Guthrie', 'Test Pitcher'];
-  late List<Player> p_pitchers;
+  late List<Player> _p_pitchers = [];
   
   List<GameInstance> _pitcherGamesG = [];
   List<String> _pitcherGamesS = ['FB', 'CB', 'CH', 'SL'];
@@ -192,33 +192,52 @@ class eCharts extends State<HomePage> {
     current_count = const Tuple2<int,int> (0,0);
   }
 
-  _modeSwitch(){
-    Player p = _findPitcher(_currentPitcher);
+  _modeSwitch() async {
+    Player p = getPitcher(_currentPitcher);
+    final DocumentReference playerRef = FirebaseFirestore.instance.collection('players').doc(p.id);
+
     if(current_mode == "Charting"){
       current_mode = "Viewing";
       modeColor = Colors.redAccent;
-      p.displayPitches = List.from(p.total_staple);
+      await playerRef.update({
+        'displayPitches': p.total_staple.map((e) => e.toJson()),
+      });
       selected = [];
-      print('Current pitch number CtV: ${_currentPitches.length}');
+      // print('Current pitch number CtV: ${_currentPitches.length}');
     } else {
       current_mode = "Charting";
       selected = [];
-      p.displayPitches = List.from(p.unsaved_pitches);
+      // p.displayPitches = List.from(p.unsaved_pitches);
+      await playerRef.update({
+        'displayPitches': p.unsaved_pitches.map((e) => e.toJson()),
+      });
       modeColor = Colors.blue;
-      print('Current pitch number VtC: ${_currentPitches.length}');
+      // print('Current pitch number VtC: ${_currentPitches.length}');
     }
-    _calcCombo(p.displayPitches);
+
+    await playerRef.update({
+      
+    });
+
     setState(() {});
   }
 
 
-  _createInstance(String pitcher, Map<String, dynamic> gdata){
-    Player p_pitcher = _findPitcher(pitcher);
+  _createInstance(String pitcher, Map<String, dynamic> gdata) async {
+    Player p_pitcher = getPitcher(pitcher);
     GameInstance game = GameInstance.fromMap(gdata);
+
     // pitcher.setId(savePitcher(pitcher));
     p_pitcher.addGame(game);
     p_pitcher.unsaved_pitches = [];
     p_pitcher.displayPitches = [];
+
+    final DocumentReference playerRef = FirebaseFirestore.instance.collection('players').doc(p_pitcher.id);
+    await playerRef.update({
+      'unsaved_pitches': [],
+      'displayPitches': [],
+      'games' : FieldValue.arrayUnion([game.toJson()]),
+    });
   }
 
   _addGame(BuildContext context){
@@ -239,7 +258,7 @@ class eCharts extends State<HomePage> {
                   // ignore: unnecessary_brace_in_string_interps
                   int gCheck = checkGames(_pitcherGamesS, _currentTeam, '$month/$day');
                   Map<String, dynamic> game = {
-                    'pitcher': _currentPitcher, 'pitches': _findPitcher(_currentPitcher).unsaved_pitches,
+                    'pitcher': _currentPitcher, 'pitches': getPitcher(_currentPitcher).unsaved_pitches,
                     'mm': month, 'dd': day, 'team': _currentTeam, 'opponent': 'N/A',
                     'gNum' : gCheck == 0 ? '' : gCheck + 1,
                   };
@@ -248,6 +267,7 @@ class eCharts extends State<HomePage> {
                   _pitcherGamesS.add(('${game['team']} ${game['mm']}/${game['dd']} ${gCheck == 0 ? '' : gCheck + 1}'));
                   _currentTeam = ' ';
                   _calcCombo(_findPitcher(_currentPitcher).displayPitches);
+
                   Navigator.pop(context);
                   },
               ),
@@ -478,12 +498,6 @@ class eCharts extends State<HomePage> {
     // _currentPitches = pitches;
   }
 
-  _addPitcher(String pitcher){
-    _Pitchers.add(pitcher);
-    _pitchPlayer.add(Player(pitcher));
-    setState(() {});
-  }
-
   Player _findPitcher(String pitcher){
     for(Player player in _pitchPlayer){
       if(player.name == pitcher){
@@ -550,10 +564,11 @@ class eCharts extends State<HomePage> {
     addPitchesToPitcher(_findPitcher(pitcher), pitches);
   }
 
-  _pitchesRequested(List<String> specs, String pitcher, List<int> i_s){
+  _pitchesRequested(List<String> specs, String pitcher, List<int> i_s) async {
     List<Pitch> final_requested = [];
-    Player p = _findPitcher(pitcher);
-    p.displayPitches = p.total_staple;
+    Player p = getPitcher(pitcher);
+    final DocumentReference playerRef = FirebaseFirestore.instance.collection('players').doc(p.id);
+    // p.displayPitches = p.total_staple;
 
     print(specs);
     // This is a controller that checks to see if the specs are all pitch choices,
@@ -630,10 +645,20 @@ class eCharts extends State<HomePage> {
         final_pool = smaller_pool.toSet();
       }
 
-      p.displayPitches = final_pool.toList();
+      await playerRef.update({
+      'displayPitches': final_pool.toList().map((e) => e.toJson()),
+      });
+
+      // p.displayPitches = final_pool.toList();
     } else {
-      p.displayPitches = p.total_staple;
-      p.total_dynamic = p.total_staple;
+
+      await playerRef.update({
+      'displayPitches': p.total_staple.map((e) => e.toJson()),
+      'total_dynamic': p.total_staple.map((e) => e.toJson()),
+      });
+
+      // p.displayPitches = p.total_staple;
+      // p.total_dynamic = p.total_staple;
     }
   }
 
@@ -859,6 +884,7 @@ List convertTypesForPitchers(String key, List data){
       wanted = <GameInstance> [];
     }
   } else {
+    
     if(data.isNotEmpty){
       wanted = data.map((pitch) => Pitch.fromJson(pitch)).toList();
     } else {
@@ -895,6 +921,15 @@ void addPitchesToPitcher(Player pitcher, List<Pitch> pitches) async {
   });
 }
 
+void addPitch(Player pitcher, Pitch pitch) async {
+  final DocumentReference playerRef = FirebaseFirestore.instance.collection('players').doc(pitcher.id);
+  await playerRef.update({
+    'unsaved_pitches': FieldValue.arrayUnion([pitch.toJson()]),
+    'displayPitches': FieldValue.arrayUnion([pitch.toJson()]),
+    'total_staple': FieldValue.arrayUnion([pitch.toJson()])
+  });
+}
+
 List<Pitch> convertToPitch(List<dynamic> pitches){
   List<Pitch> finale = [];
   for(var item in pitches){
@@ -908,6 +943,16 @@ Future<void> removeFromDB(String playerId) async {
   CollectionReference playersCollection = FirebaseFirestore.instance.collection('players');
 
   await playersCollection.doc(playerId).delete();
+}
+
+Player getPitcher(String pitcher){
+  Player p_pitcher = Player(' ');
+  for(Player player in _p_pitchers){
+    if(player.name == pitcher){
+      p_pitcher = player;
+    }
+  }
+  return p_pitcher;
 }
 
 //The Program
@@ -964,14 +1009,14 @@ Future<void> removeFromDB(String playerId) async {
     // Fetching data
     fetchPitchers().then((tuple) {
       // Do something with the fetched pitchers
-      List<Player> p_pitchers = tuple.item1;
+      _p_pitchers = tuple.item1;
       setState(() {
         if(_Pitchers.isEmpty){
           _Pitchers.addAll(tuple.item2);
           print('Adding pitchers');
           print(_Pitchers);
         } else if(_Pitchers != tuple.item2){
-          p_pitchers = tuple.item1;
+          _p_pitchers = tuple.item1;
           _Pitchers = tuple.item2;
         }
       });
@@ -1002,7 +1047,9 @@ Future<void> removeFromDB(String playerId) async {
     }
     
 
-    _currentPitches = _findPitcher(_currentPitcher).displayPitches;
+    _currentPitches = getPitcher(_currentPitcher).displayPitches;
+    _calcCombo(_currentPitches);
+    
 
     
     return Scaffold(
@@ -1086,14 +1133,22 @@ Future<void> removeFromDB(String playerId) async {
                 delegate: DellySkelly(widgetSize: dellySkellys, height: 50, width: 210, off1: dellySkellys.width - 425, off2: 70),
                 child: DropdownButton<String>(
                   value: _currentPitcher,
-                  onChanged: (String? newValue) {
+                  onChanged: (String? newValue) async {
+                    Player p = getPitcher(newValue!);
+                    final DocumentReference playerRef = FirebaseFirestore.instance.collection('players').doc(p.id);
+                    await playerRef.update({
+                      'displayPitches': p.unsaved_pitches.map((e) => e.toJson()),
+                    });
                     setState(() {
-                      _currentPitcher = newValue!;
+                      
+                      print('Player ID: ${p.id}');
+                      print('Player Pitches ${p.displayPitches}');
+                      _currentPitcher = p.name;
                       print('Current Pitcher: $_currentPitcher');
-                      _currentPitches = _findPitcher(_currentPitcher).displayPitches;
+                      _currentPitches = p.displayPitches;
                       _currentPitches.isNotEmpty ? (_currentPitches.last) : 0;
-                      _pitcherGamesG = _findPitcher(_currentPitcher).games.isEmpty ? [] : 
-                                        _findPitcher(_currentPitcher).games;
+                      _pitcherGamesG = p.games.isEmpty ? [] : 
+                                        p.games;
                       
 
                       // TODO: Here is the start for the certain selections
@@ -1104,7 +1159,6 @@ Future<void> removeFromDB(String playerId) async {
                           _pitcherGamesS.add(game.getDisplayText());
                         }
                       }
-                      _calcCombo(_currentPitches);
                       
                       
                     });
@@ -1351,8 +1405,8 @@ Future<void> removeFromDB(String playerId) async {
                                           },
                                         new_pitch = Pitch.fromMap(pMap),
                                         _cPitchLocations.add(new_pitch.location), 
-                                        _addPitch(new_pitch, _currentPitcher),
-                                        _calcCombo(_findPitcher(_currentPitcher).displayPitches),
+                                        addPitch(getPitcher(_currentPitcher), new_pitch),
+                                        _calcCombo(getPitcher(_currentPitcher).displayPitches),
                                         Navigator.pop(context)}}, 
                                       child: const Text('Confirm')
                                     ),        
