@@ -20,14 +20,7 @@ class PitchWidget extends StatefulWidget{
 
 
 class _PitchWidgetState extends State<PitchWidget> {
-  List<Pitch> currentPitches = [Pitch.fromMap({
-        'type': 'FB',
-        'spd': 88,
-        'loc_x': 361.00, 'loc_y': 200.00,
-        'oldCountBalls' : 0, 'oldCountStrikes': 0, 'strike': true,
-        'swing': false, 'hit': false, 'K' : true, 'ꓘ' : false,
-        'hbp': false, 'bb': false, 'in_zone': false, 'foul': false, 'bip': false
-      })];
+  List<Pitch> currentPitches = [];
 
   @override
   Widget build(BuildContext context) {

@@ -23,6 +23,7 @@ import 'package:tuple/tuple.dart';
 // import 'package:touchable/touchable.dart';
 import 'DellySkelly.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'Baseball_Pieces/HittingWidget.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -53,7 +54,24 @@ const PActions = <Widget>[
   Text('BIP')
 ];
 
+const BIPpaths = <Widget> [
+  Text('Ground Ball'),
+  Text('Line Drive'),
+  Text('Fly Ball'),
+];
+
+const BIPResults = [
+  ' ',
+  'Out',
+  'Single',
+  'Double',
+  'Triple',
+  'HR',
+  'FC',
+];
+
 const List<String> PActionsList = ['Swing', 'Foul', 'Hit', 'BB', 'HBP', 'K', 'ꓘ', 'BIP'];
+
 
 
 class eCharts extends State<HomePage> {
@@ -138,6 +156,7 @@ class eCharts extends State<HomePage> {
   List<Player> _pitchPlayer = [];
   List<String> selected = [];
   PitchWidget? pitchWidget;
+  
 
   
   
@@ -584,7 +603,7 @@ class eCharts extends State<HomePage> {
 
     if(specs.isNotEmpty){
       bool game = i_s.any((element) => element >= 6);
-      print('Game: ${game}');
+      // print('Game: ${game}');
       if(game){
         for(String spec in specs){
           if(!pitchChoices.contains(spec) && spec != "Strike" && spec != "Ball"){
@@ -602,7 +621,7 @@ class eCharts extends State<HomePage> {
         after_game.addAll(specs);
       }
 
-      print('After filtering games: $after_game');
+      // print('After filtering games: $after_game');
       List<Pitch> c_pitchpool = List.from(pitch_pool);
       if(after_game.isNotEmpty){
         Set<Pitch> game_filtered_pool = Set<Pitch>();
@@ -629,8 +648,8 @@ class eCharts extends State<HomePage> {
         
       }
 
-      print('After types: $after_type');
-      print(smaller_pool);
+      // print('After types: $after_type');
+      // print(smaller_pool);
       if(after_type.isNotEmpty){
         Set<Pitch> final_filtered_pool = Set<Pitch>();
         for(String spec in after_type){
@@ -717,7 +736,7 @@ class eCharts extends State<HomePage> {
                     ElevatedButton(
                       child: const Text('Confirm'),
                       onPressed: () => {
-                        _reset(_currentPitcher),
+                        resetSession(getPitcher(_currentPitcher)),
                         Navigator.pop(context)
                       },
                     ),
@@ -743,7 +762,9 @@ class eCharts extends State<HomePage> {
           content: ButtonBar(
             alignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(onPressed: () => {_undoPitch(_currentPitcher), Navigator.pop(context)}, child: const Text('Confirm')),
+              ElevatedButton(onPressed: () => {
+                undoPitchDB(getPitcher(_currentPitcher)),
+                Navigator.pop(context)}, child: const Text('Confirm')),
               ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel'))
             ]
           )
@@ -829,6 +850,23 @@ class eCharts extends State<HomePage> {
       }
     );
   }
+  // Define isPath and rslt as instance variables in your widget class
+List<bool> isPath = List.filled(BIPpaths.length, false);
+String? rslt;
+
+_bip_control() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Container(
+        height: 500,
+        width: 500,
+        child: HittingWidget(),
+      );
+    },
+  );
+}
+
 
 
 
@@ -945,6 +983,46 @@ Future<void> removeFromDB(String playerId) async {
   await playersCollection.doc(playerId).delete();
 }
 
+Future<void> undoPitchDB(Player pitcher) async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+      .collection('players')
+      .where('name', isEqualTo: pitcher.name)
+      .limit(1)
+      .get();
+    if (querySnapshot.docs.isNotEmpty) {
+      DocumentSnapshot playerSnapshot = querySnapshot.docs.first;
+      Map<String, dynamic>? playerData = playerSnapshot.data() as Map<String, dynamic>?;
+      List<dynamic> un_pitches = playerData!['unsaved_pitches'];
+      List<dynamic> tot_stap = playerData['total_staple'];
+      List<dynamic> disp = playerData['displayPitches'];
+
+
+      if (un_pitches.isNotEmpty && current_mode == "Charting") {
+        un_pitches.removeLast();
+        tot_stap.removeLast();
+        disp.removeLast();
+
+
+        await playerSnapshot.reference.update({'unsaved_pitches': un_pitches, 
+                                               'total_staple' : tot_stap,
+                                               'displayPitches': disp});
+        print('Last pitch removed successfully.');
+      } else {
+        print('No pitches to remove.');
+      }
+  } else {
+    print('Pitcher not found.');
+  }
+}
+
+Future<void> resetSession(Player pitcher) async {
+  final DocumentReference playerRef = FirebaseFirestore.instance.collection('players').doc(pitcher.id);
+  await playerRef.update({
+    'unsaved_pitches': [],
+    'displayPitches': []
+  });
+}
+
 Player getPitcher(String pitcher){
   Player p_pitcher = Player(' ');
   for(Player player in _p_pitchers){
@@ -1013,8 +1091,8 @@ Player getPitcher(String pitcher){
       setState(() {
         if(_Pitchers.isEmpty){
           _Pitchers.addAll(tuple.item2);
-          print('Adding pitchers');
-          print(_Pitchers);
+          // print('Adding pitchers');
+          // print(_Pitchers);
         } else if(_Pitchers != tuple.item2){
           _p_pitchers = tuple.item1;
           _Pitchers = tuple.item2;
@@ -1024,27 +1102,11 @@ Player getPitcher(String pitcher){
       // Handle the error
       print('Error fetching pitchers: $error');
     });
-
-    // print(_findPitcher('Test Pitcher').name);
-    // if(_findPitcher('Test Pitcher').total_staple.length < 20){
-    //   print('I AM DOING TESTING');
-    //   _testingPitches(20);
-    // }
- 
-    // Player ptest = _findPitcher('Test Pitcher');
-    // print('Here is the test unsaved: ${ptest.unsaved_pitches}');
-
-    // createPlayer('Test Pitcher').then((_) {
-    //   print('Test Pitcher added successfully');
-    //   addPitchesToPitcher(ptest, ptest.unsaved_pitches);
-    // }).catchError((error) {
-    //   print('Error adding Test Pitcher');
-    // });
     
 
-    for(String pitcher in _Pitchers){
-      _pitchPlayer.add(Player(pitcher));
-    }
+    // for(String pitcher in _Pitchers){
+    //   _pitchPlayer.add(Player(pitcher));
+    // }
     
 
     _currentPitches = getPitcher(_currentPitcher).displayPitches;
@@ -1141,10 +1203,10 @@ Player getPitcher(String pitcher){
                     });
                     setState(() {
                       
-                      print('Player ID: ${p.id}');
-                      print('Player Pitches ${p.displayPitches}');
+                      // print('Player ID: ${p.id}');
+                      // print('Player Pitches ${p.displayPitches}');
                       _currentPitcher = p.name;
-                      print('Current Pitcher: $_currentPitcher');
+                      // print('Current Pitcher: $_currentPitcher');
                       _currentPitches = p.displayPitches;
                       _currentPitches.isNotEmpty ? (_currentPitches.last) : 0;
                       _pitcherGamesG = p.games.isEmpty ? [] : 
@@ -1366,10 +1428,10 @@ Player getPitcher(String pitcher){
                                             isSelected: isPAction,
                                             onPressed: (int index) {
                                               setState(() {
-                                                if(index == 0){pMap['swing'] = !pMap['swing']; isPAction[index]; }
+                                                if(index == 0){pMap['swing'] = !pMap['swing']; isPAction[index];}
                                                 if(index == 1){pMap['swing'] = !pMap['swing']; pMap['foul'] = !pMap['foul'];}
                                                 if(index == 2){pMap['swing'] = !pMap['swing']; pMap['hit'] = !pMap['hit'];
-                                                              pMap['bip'] = !pMap['bip'];}
+                                                              pMap['bip'] = !pMap['bip']; _bip_control();}
                                                 if(index == 3){pMap['bb'] = !pMap['bb'];}
                                                 if(index == 4){pMap['hbp'] = !pMap['hbp'];}
                                                 if(index == 5){pMap['swing'] = !pMap['swing']; pMap['K'] = !pMap['K'];}
