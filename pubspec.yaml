@@ -50,6 +50,7 @@ dependencies:
   firebase_core: ^2.13.1
   firebase_database: ^10.2.2
   cloud_firestore: ^4.8.0
+  dashed_line: ^0.1.0+3
 
 dev_dependencies:
   flutter_test:

@@ -1127,6 +1127,7 @@ Player getPitcher(String pitcher){
                     image: DecorationImage(image: AssetImage("assets/images/new_Chart.png"),),
                 ),
               ),
+              // Menu Top right
               Padding(
                 padding: const EdgeInsets.only(top: 18.0),
                 child:

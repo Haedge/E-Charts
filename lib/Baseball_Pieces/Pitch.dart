@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
+import 'Hit.dart';
 
 class Pitch{
   String type = "";
@@ -22,6 +23,8 @@ class Pitch{
   int balls = 0;
   Offset ar = const Offset(0, 0);
   Offset ar2 = const Offset(0, 0);
+  dynamic contact = false;
+
 
   Pitch(this.type, this.speed, this.strike, this.swing, this.hit, this.k_looking, this.k_swinging, this.hbp,
         this.bb, this.in_zone, this.foul, this.bip, this.location, this.oldCount);

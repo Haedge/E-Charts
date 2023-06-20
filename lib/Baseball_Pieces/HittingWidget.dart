@@ -5,6 +5,10 @@ import 'package:my_app/eCharts.dart';
 import 'package:my_app/Baseball_Pieces/Hit.dart';
 import 'dart:ui';
 import 'package:my_app/linePainter.dart';
+import 'package:dashed_line/dashed_line.dart';
+
+String? rslt;
+String pathtype = ' ';
 
 class HittingWidget extends StatefulWidget {
   @override
@@ -12,12 +16,10 @@ class HittingWidget extends StatefulWidget {
 }
 
 class _HittingWidgetState extends State<HittingWidget> {
-  List<Offset> dots = [];
+  Offset dots = const Offset(250.5, 305);
   Offset startPoint = const Offset(250.5, 305); // 255, 305
   Size dellySkellyH = const Size(500, 50);
   List<bool> isPath = List.filled(BIPpaths.length, false);
-  String? rslt;
-  String path = ' ';
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +37,7 @@ class _HittingWidgetState extends State<HittingWidget> {
                   onTapUp: (TapUpDetails details) {
                     setState(() {
                       Offset tappedPosition = details.localPosition;
-                      dots = [startPoint, tappedPosition];
+                      dots = tappedPosition;
                     });
                   },
                   child: Stack(
@@ -50,7 +52,11 @@ class _HittingWidgetState extends State<HittingWidget> {
                         ),
                       ),
                       CustomPaint(
-                        painter: DrawingPainter(dots, startPoint),
+                        painter: (
+                          pathtype == 'Ground Ball' ? linePainter(dots, startPoint) :
+                          pathtype == 'Line Drive' ? DrawingPainter([dots], startPoint) :
+                          linePainter(dots, startPoint)
+                        ),
                         child: Container(),
                       ),
                     ],
@@ -84,7 +90,7 @@ class _HittingWidgetState extends State<HittingWidget> {
                         setState(() {
                         for (int i = 0; i < isPath.length; i++) {
                           isPath[i] = i == _ && !isPath[_];
-                          path = BIPpaths[_].toString();
+                          pathtype = (BIPpaths[_] as Text).data ?? '';
                         }
                         });
                       },
@@ -137,6 +143,9 @@ class DrawingPainter extends CustomPainter {
   final List<Offset> dots;
   final Offset startPoint;
 
+  late List<Offset> plotting = [startPoint];
+  
+
   DrawingPainter(this.dots, this.startPoint);
 
   @override
@@ -148,12 +157,14 @@ class DrawingPainter extends CustomPainter {
 
     Paint linePaint = Paint()
       ..color = Colors.blue
-      ..strokeWidth = 4;
+      ..strokeWidth = 2;
+    
+    plotting.addAll(dots);
 
-    canvas.drawPoints(PointMode.points, dots, dotPaint);
+    canvas.drawPoints(PointMode.points, plotting, dotPaint);
 
     if (dots.isNotEmpty) {
-      canvas.drawLine(startPoint, dots[1], linePaint);
+      canvas.drawLine(startPoint, plotting[1], linePaint);
     }
   }
 
