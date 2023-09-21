@@ -24,10 +24,12 @@ class Pitch{
   Offset ar = const Offset(0, 0);
   Offset ar2 = const Offset(0, 0);
   dynamic contact = false;
+  Hit hdesc = Hit("", const Offset(0, 0), "");
+  Hit def_hdesc = Hit("", const Offset(0, 0), "");
 
 
   Pitch(this.type, this.speed, this.strike, this.swing, this.hit, this.k_looking, this.k_swinging, this.hbp,
-        this.bb, this.in_zone, this.foul, this.bip, this.location, this.oldCount);
+        this.bb, this.in_zone, this.foul, this.bip, this.location, this.oldCount, this.hdesc);
 
   cBalls(){
     return oldCount.item1;
@@ -81,6 +83,7 @@ class Pitch{
       pdata['bip'],
       Offset(pdata['loc_x'], pdata['loc_y']),
       Tuple2(pdata['oldCountBalls'], pdata['oldCountStrikes']),
+      pdata['hdesc'],
     );
   }
 
@@ -102,10 +105,12 @@ class Pitch{
       'bip': bip,
       'oldCountBalls': oldCount.item1,
       'oldCountStrikes': oldCount.item2,
+      'hdesc': hdesc.toJson(),
     };
   }
 
   factory Pitch.fromJson(Map<String, dynamic> json){
+    Hit def_hdesc = Hit("", const Offset(0, 0), "");
     return Pitch(
       json['type'],
       json['spd'],
@@ -121,10 +126,11 @@ class Pitch{
       json['bip'],
       Offset(json['loc_x'], json['loc_y']),
       Tuple2(json['oldCountBalls'], json['oldCountStrikes']),
+      json['hdesc'] != null ? Hit.fromJson(json['hdesc']) : def_hdesc,
     );
   }
 
     // Pitch(this.type, this.speed, this.strike, this.swing, this.hit, this.k_looking, this.k_swinging, this.hbp,
-    //     this.bb, this.in_zone, this.foul, this.bip, this.location, this.oldCount);
+    //     this.bb, this.in_zone, this.foul, this.bip, this.location, this.oldCount, this.hdesc);
 
 }

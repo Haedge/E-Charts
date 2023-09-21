@@ -15,6 +15,7 @@ import 'package:printing/printing.dart';
 import 'Baseball_Pieces/PitchWidget.dart';
 import 'Baseball_Pieces/Player.dart';
 import 'Baseball_Pieces/Pitch.dart';
+import 'Baseball_Pieces/Hit.dart';
 // import 'Baseball_Pieces/paintPitch.dart';
 import 'HomePage.dart';
 import 'GameInstance.dart';
@@ -854,8 +855,9 @@ class eCharts extends State<HomePage> {
 List<bool> isPath = List.filled(BIPpaths.length, false);
 String? rslt;
 
-_bip_control() {
-  showDialog(
+_bip_control() async {
+  Hit hit = Hit(' ', const Offset (0,0), ' ');
+  Hit? temp = await showDialog<Hit>(
     context: context,
     builder: (BuildContext context) {
       return Container(
@@ -865,6 +867,21 @@ _bip_control() {
       );
     },
   );
+
+  print('Temp: ${temp.runtimeType}');
+
+  if(temp != null){
+    setState(() {
+      hit = temp;
+    });
+  }
+
+  await Future.delayed(const Duration(milliseconds: 100));
+
+  print(hit);
+  
+  return hit;
+
 }
 
 
@@ -1338,7 +1355,8 @@ Player getPitcher(String pitcher){
                               'oldCountBalls' : 0, 'oldCountStrikes' : 0,
                               'strike' : false, 'swing' : false, 'hit' : false,
                               'K' : false, 'ꓘ' : false, 'hbp' : false, 'bb' : false,
-                              'in_zone' : false, 'foul' : false, 'bip' : false
+                              'in_zone' : false, 'foul' : false, 'bip' : false,
+                              'hdesc' : Hit(' ', const Offset(0,0), ' ')
                             };
                             pMap['oldCountBalls'] = current_count.item1;
                             pMap['oldCountStrikes'] = current_count.item2;
@@ -1431,8 +1449,9 @@ Player getPitcher(String pitcher){
                                               setState(() {
                                                 if(index == 0){pMap['swing'] = !pMap['swing']; isPAction[index];}
                                                 if(index == 1){pMap['swing'] = !pMap['swing']; pMap['foul'] = !pMap['foul'];}
-                                                if(index == 2){pMap['swing'] = !pMap['swing']; pMap['hit'] = !pMap['hit'];
-                                                              pMap['bip'] = !pMap['bip']; _bip_control();}
+                                                if(index == 2){
+                                                    pMap['swing'] = !pMap['swing']; pMap['hit'] = !pMap['hit'];
+                                                    isPAction[index] = pMap['bip'] = !pMap['bip'];}
                                                 if(index == 3){pMap['bb'] = !pMap['bb'];}
                                                 if(index == 4){pMap['hbp'] = !pMap['hbp'];}
                                                 if(index == 5){pMap['swing'] = !pMap['swing']; pMap['K'] = !pMap['K'];}
@@ -1444,6 +1463,10 @@ Player getPitcher(String pitcher){
                                                             pMap['hit'], pMap['bb'], pMap['hbp'],
                                                             pMap['K'], pMap['ꓘ'], pMap['bip']];
                                               });
+
+                                                if(index == 2 || index == 7){
+                                                  pMap['hdesc'] = _bip_control() as Hit;
+                                                }
                                               },
                                             children: PActions,
                                             ),
@@ -1466,6 +1489,7 @@ Player getPitcher(String pitcher){
                                           } else {
                                             pMap['spd'] = int.parse(textController.text)
                                           },
+                                        if(pMap['hit']){print(pMap['hdesc'].location)},
                                         new_pitch = Pitch.fromMap(pMap),
                                         _cPitchLocations.add(new_pitch.location), 
                                         addPitch(getPitcher(_currentPitcher), new_pitch),

@@ -7,7 +7,7 @@ import 'dart:ui';
 import 'package:my_app/linePainter.dart';
 import 'package:dashed_line/dashed_line.dart';
 
-String? rslt;
+String rslt = ' ';
 String pathtype = ' ';
 
 class HittingWidget extends StatefulWidget {
@@ -20,6 +20,7 @@ class _HittingWidgetState extends State<HittingWidget> {
   Offset startPoint = const Offset(250.5, 305); // 255, 305
   Size dellySkellyH = const Size(500, 50);
   List<bool> isPath = List.filled(BIPpaths.length, false);
+
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +119,7 @@ class _HittingWidgetState extends State<HittingWidget> {
                       value: rslt,
                       onChanged: (String? newValue) {
                         setState(() {
-                          rslt = newValue;
+                          rslt = newValue!;
                         });
                       },
                       items: BIPResults
@@ -129,7 +130,13 @@ class _HittingWidgetState extends State<HittingWidget> {
                           .toList(),
                     ),
                   ),      
-                    ElevatedButton(onPressed:() => Navigator.pop(context), child: const Text('Confirm'))
+                    ElevatedButton(onPressed: () {
+                                      Hit hit = Hit(pathtype, dots, rslt);
+                                      rslt = ' ';
+                                      pathtype = ' ';
+                                      Navigator.pop(context, hit);
+                                      }, 
+                                      child: const Text('Confirm'))
                 ],)
               ),
             ],

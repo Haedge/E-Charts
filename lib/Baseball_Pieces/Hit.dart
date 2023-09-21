@@ -9,7 +9,7 @@ import 'package:tuple/tuple.dart';
 
 class Hit {
   String ball_path;
-  Tuple2<Offset, Offset> location;
+  Offset location;
   String result;
 
   Hit(this.ball_path, this.location, this.result);
@@ -19,7 +19,7 @@ class Hit {
   factory Hit.fromJson(Map <String, dynamic> data){
     return Hit(
       data['ball_path'],
-      data['location'],
+      Offset(data['loc_x'], data['loc_y']),
       data['result']
       );
   }
@@ -27,7 +27,8 @@ class Hit {
   Map<String, dynamic> toJson(){
     return {
       'ball_path': ball_path,
-      'location': location,
+      'loc_x': location.dx,
+      'loc_y': location.dy,
       'result': result
     };
   }
