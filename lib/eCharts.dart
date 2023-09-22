@@ -868,8 +868,6 @@ _bip_control() async {
     },
   );
 
-  print('Temp: ${temp.runtimeType}');
-
   if(temp != null){
     setState(() {
       hit = temp;
@@ -877,11 +875,8 @@ _bip_control() async {
   }
 
   await Future.delayed(const Duration(milliseconds: 100));
-
-  print(hit);
   
   return hit;
-
 }
 
 
@@ -1445,7 +1440,7 @@ Player getPitcher(String pitcher){
                                               minWidth: 85.0,
                                             ),
                                             isSelected: isPAction,
-                                            onPressed: (int index) {
+                                            onPressed: (int index) async {
                                               setState(() {
                                                 if(index == 0){pMap['swing'] = !pMap['swing']; isPAction[index];}
                                                 if(index == 1){pMap['swing'] = !pMap['swing']; pMap['foul'] = !pMap['foul'];}
@@ -1464,8 +1459,13 @@ Player getPitcher(String pitcher){
                                                             pMap['K'], pMap['ꓘ'], pMap['bip']];
                                               });
 
-                                                if(index == 2 || index == 7){
-                                                  pMap['hdesc'] = _bip_control() as Hit;
+                                                if(index == 2 && pMap['hit']|| index == 7 && pMap['bip']){
+                                                  Hit? hit = await _bip_control();
+                                                    if (hit != null) {
+                                                      setState(() {
+                                                        pMap['hdesc'] = hit;
+                                                      });
+                                                    }
                                                 }
                                               },
                                             children: PActions,
@@ -1489,7 +1489,6 @@ Player getPitcher(String pitcher){
                                           } else {
                                             pMap['spd'] = int.parse(textController.text)
                                           },
-                                        if(pMap['hit']){print(pMap['hdesc'].location)},
                                         new_pitch = Pitch.fromMap(pMap),
                                         _cPitchLocations.add(new_pitch.location), 
                                         addPitch(getPitcher(_currentPitcher), new_pitch),
