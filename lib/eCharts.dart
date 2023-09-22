@@ -859,7 +859,16 @@ class eCharts extends State<HomePage> {
       }
     );
   }
-  // Define isPath and rslt as instance variables in your widget class
+
+  _sprayOption(){
+    showDialog(
+      context: context, 
+      builder: (BuildContext context) {
+        return sprayWidget(locs: _currentPitches);
+      }
+    );
+  }
+
 List<bool> isPath = List.filled(BIPpaths.length, false);
 String? rslt;
 
@@ -1100,6 +1109,11 @@ Player getPitcher(String pitcher){
       'name': 'Add/Remove Pitcher',
       'icon': Icons.settings,
       'function': () {_pitcherOption();},
+    },
+    {
+      'name': 'Spray Chart',
+      'icon': Icons.compass_calibration_outlined,
+      'function': () {_sprayOption();}
     },
   ];
 

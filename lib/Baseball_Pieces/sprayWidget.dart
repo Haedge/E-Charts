@@ -28,13 +28,13 @@ class _sprayWidgetState extends State<sprayWidget>{
       return AlertDialog(
         content: SizedBox(
           height: 300,
-          width: 500,
+          width: 375,
           child: Stack(
             children: [
               info,
               SizedBox(
                 height: 300,
-                width: 500,
+                width: 375,
                 child: Stack(
                     children: [
                       Positioned.fill(
