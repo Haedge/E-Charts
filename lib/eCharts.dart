@@ -17,6 +17,7 @@ import 'Baseball_Pieces/Player.dart';
 import 'Baseball_Pieces/Pitch.dart';
 import 'Baseball_Pieces/Hit.dart';
 // import 'Baseball_Pieces/paintPitch.dart';
+import 'Baseball_Pieces/sprayWidget.dart';
 import 'HomePage.dart';
 import 'GameInstance.dart';
 import 'package:multiselect/multiselect.dart';
@@ -541,14 +542,18 @@ class eCharts extends State<HomePage> {
   }
 
   _pitchInsight(Pitch pitch, context, List<Pitch> pitches){
+    bool updateData = false;
+    if(pitch.hdesc != null && pitch.hdesc != Hit(' ', Offset.zero, ' ')){
+      updateData = true;
+    }
       showDialog(
         context: context,
         builder: (BuildContext context){
           return AlertDialog(
             title: const Text('Pitch Information'),
             content: SizedBox(
-              height: 150,
-              width: 300,
+              height: updateData ? 500 : 150,
+              width: updateData ? 500 : 300,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -563,7 +568,10 @@ class eCharts extends State<HomePage> {
                     (pitch.swing ? (pitch.hit ? "Hit" : "Swung") : "Looking")}" :
                     "Ball${pitch.bb || pitch.hbp ? ", Walk" : ""}"}"),
                   ),
-                  Text("\u2022 Count Thrown in: ${pitch.oldCount}")
+                  Text("\u2022 Count Thrown in: ${pitch.oldCount}"),
+
+                  if(updateData)
+                    sprayWidget(locs: [pitch]),
 
                 ],
               )

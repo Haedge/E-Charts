@@ -38,6 +38,8 @@ class _HittingWidgetState extends State<HittingWidget> {
                   onTapUp: (TapUpDetails details) {
                     setState(() {
                       Offset tappedPosition = details.localPosition;
+                      print(tappedPosition);
+                      // cf middle = 250.5, 87.0
                       dots = tappedPosition;
                     });
                   },
