@@ -20,7 +20,7 @@ class paintHeatmap extends CustomPainter{
               }
   );
 
-  List<Offset> getLocs(Size size, List<Pitch> pitchs){
+  List<Offset> getLocs(List<Pitch> pitchs){
     return pitchs.map((pitch){
       return Offset(pitch.location.dx, pitch.location.dy);
     }).toList();
@@ -50,51 +50,44 @@ class paintHeatmap extends CustomPainter{
 
   @override
   void paint(Canvas canvas, Size size) {
-    var binPaint = Paint()..style = PaintingStyle.fill;
-    var binWidth = size.width / divisions;
-    var binHeight = size.height / divisions;
-    Canvas myCanvas = canvas;
 
-    // Clear the canvas
-    myCanvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), Paint()..color = Colors.transparent);
 
-    var bins = List<List<int>>.generate(
-      divisions, (i) => List<int>.generate(divisions, (j) => 0)
-    );
+    const int maxDensity = 20;
+    const List<Color> intensityColors = [
+      Colors.blue,
+      Colors.green,
+      Colors.yellow,
+      Colors.orange,
+      Colors.red
+    ];
 
-    var maxBinCount = 0;
+    List<Offset> points = getLocs(pitches);
 
-    getLocs(size, pitches).forEach((loc) {
-      var xBin = min((loc.dx / binWidth).floor(), divisions - 1);
-      var yBin = min((loc.dy / binHeight).floor(), divisions - 1);
 
-      bins[xBin][yBin]++;
 
-      maxBinCount =
-        bins[xBin][yBin] > maxBinCount ? bins[xBin][yBin] : maxBinCount;
+      for (final point in points){
+        final density = calculateDensity(point, points, size);
 
-    });
+        final colorIndex = (density / maxDensity * (intensityColors.length - 1)).round();
+        final color = intensityColors[colorIndex];
 
-    bins.asMap().forEach((rowIndex, row) {
-      row.asMap().forEach((colIndex, col) {
-        var left = binWidth * rowIndex;
-        var top = binHeight * colIndex;
-        var right = binWidth * (rowIndex + 1);
-        var bottom = binHeight * (colIndex + 1);
+        final paint = Paint()
+          ..color = color
+          ..style = PaintingStyle.fill;
+        
+        canvas.drawCircle(point, 7.5, paint);
 
-        var color = getColor(colors, col / maxBinCount);
+      }
+    }
 
-        canvas.drawRRect(RRect.fromLTRBR(left, top, right, bottom, Radius.zero),
-        binPaint..color = color!);
-
-      });
-    });
-
+  double calculateDensity(Offset point, List<Offset> allPoints, Size size){
+    const radius = 50.0;
+    final nearbyPoints = allPoints.where((p) => (p - point).distanceSquared <= radius * radius).toList();
+    return nearbyPoints.length.toDouble();
   }
 
-  
-  
-  
   @override
-  bool shouldRepaint(paintHeatmap oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate){
+    return true;
+  }
 }

@@ -707,7 +707,8 @@ class eCharts extends State<HomePage> {
 
     Random random = Random();
     Pitch new_pitch;
-    Player tester = _findPitcher('Test Pitcher');
+    Player tester = getPitcher('Test Data');
+    print(tester.name);
     // Strike zone total area: 460 x 495
     for (int i = 0; i < num_pitch; i++) {
       Map<String, dynamic> pitch = {
@@ -715,14 +716,17 @@ class eCharts extends State<HomePage> {
         'spd': random.nextInt(60) + 39,
         'loc_x': random.nextInt(460).toDouble(), 'loc_y': random.nextInt(495).toDouble(),
         'oldCountBalls' : 0, 'oldCountStrikes': 0, 'strike': _rndB(),
-        'swing': _rndB(), 'hit': _rndB(), 'K' : _rndB(), 'ꓘ' : _rndB(),
-        'hbp': _rndB(), 'bb': _rndB(), 'in_zone': _rndB(), 'foul': _rndB(), 'bip': _rndB()
+        'swing': _rndB(), 'hit': false, 'K' : _rndB(), 'ꓘ' : _rndB(),
+        'hbp': _rndB(), 'bb': _rndB(), 'in_zone': _rndB(), 'foul': _rndB(), 'bip': _rndB(),
+        'hdesc' : Hit('t', Offset.zero, 't')
       };
 
       new_pitch = Pitch.fromMap(pitch);
-      _addPitch(new_pitch, tester.name);
+      addPitch(tester, new_pitch);
       _calcCombo(_findPitcher(tester.name).displayPitches);
     }
+
+    print('Added $num_pitch pitches to ${tester.name}');
 
     // tester.addGame(game)
 
