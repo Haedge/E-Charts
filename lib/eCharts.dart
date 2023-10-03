@@ -35,6 +35,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 String current_mode = "Charting";
+bool isHeatmapMode = false;
 
 final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
@@ -227,6 +228,7 @@ class eCharts extends State<HomePage> {
       // print('Current pitch number CtV: ${_currentPitches.length}');
     } else {
       current_mode = "Charting";
+      isHeatmapMode = false;
       selected = [];
       // p.displayPitches = List.from(p.unsaved_pitches);
       await playerRef.update({
@@ -241,6 +243,12 @@ class eCharts extends State<HomePage> {
     });
 
     setState(() {});
+  }
+
+  _heatSwitch(){
+    if(current_mode == 'Viewing'){
+      isHeatmapMode = !isHeatmapMode;
+    }
   }
 
 
@@ -869,6 +877,24 @@ class eCharts extends State<HomePage> {
     );
   }
 
+  _heatMapOption(BuildContext content){
+    showDialog(
+      context: content,
+      builder: (BuildContext context){
+        return AlertDialog(
+          title: Text(isHeatmapMode ? 'Switch to Normal' : 'Switch to Heatmap'),
+          content: ButtonBar(
+            alignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(onPressed: () => {_heatSwitch(),Navigator.pop(context), print(isHeatmapMode)}, child: const Text('Confirm')),
+              ElevatedButton(onPressed: () => {Navigator.pop(context)}, child: const Text('Cancel'))
+            ]
+          )
+        );
+      }
+    );
+  }
+
 List<bool> isPath = List.filled(BIPpaths.length, false);
 String? rslt;
 
@@ -1114,6 +1140,11 @@ Player getPitcher(String pitcher){
       'name': 'Spray Chart',
       'icon': Icons.compass_calibration_outlined,
       'function': () {_sprayOption();}
+    },
+    {
+      'name': 'Heat Map',
+      'icon': Icons.hub_outlined,
+      'function': () {_heatMapOption(context);}
     },
   ];
 
