@@ -5,9 +5,12 @@ import 'dart:core';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:my_app/HomePage.dart';
+import 'package:my_app/dataProvider.dart';
+import 'package:my_app/eCharts.dart';
 
 import 'Baseball_Pieces/PitchWidget.dart';
 import 'firebase_options.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,16 +18,23 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(eCharts());
+  runApp(MyApp());
   }
 
-class eCharts extends StatelessWidget {
-  const eCharts({Key? key}) : super(key: key);
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    PitchWidget? pitchWidget;
+    final eChartsInstance = eCharts();
+    // return MaterialApp(
+    //   home: const HomePage(title: 'Chart App'),
+    // );
+
     return MaterialApp(
-      home: const HomePage(title: 'Chart App'),
+      home: ChangeNotifierProvider(
+        create: (context) => DataProvider(eChartsInstance),
+        child: const HomePage(title: 'Chart App'),
+      ),
     );
   }
 }

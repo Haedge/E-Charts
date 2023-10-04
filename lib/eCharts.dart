@@ -12,6 +12,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:provider/provider.dart';
 import 'Baseball_Pieces/PitchWidget.dart';
 import 'Baseball_Pieces/Player.dart';
 import 'Baseball_Pieces/Pitch.dart';
@@ -28,6 +29,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'Baseball_Pieces/HittingWidget.dart';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'dataProvider.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -803,7 +805,7 @@ class eCharts extends State<HomePage> {
           content: ButtonBar(
             alignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(onPressed: () => {_modeSwitch(),Navigator.pop(context)}, child: const Text('Confirm')),
+              ElevatedButton(onPressed: () => {_modeSwitch(), updatePitchers(),Navigator.pop(context)}, child: const Text('Confirm')),
               ElevatedButton(onPressed: () => {Navigator.pop(context)}, child: const Text('Cancel'))
             ]
           )
@@ -890,7 +892,7 @@ class eCharts extends State<HomePage> {
           content: ButtonBar(
             alignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(onPressed: () => {_heatSwitch(),Navigator.pop(context), print(isHeatmapMode)}, child: const Text('Confirm')),
+              ElevatedButton(onPressed: () => {_heatSwitch(), updatePitchers(),Navigator.pop(context), print(isHeatmapMode)}, child: const Text('Confirm')),
               ElevatedButton(onPressed: () => {Navigator.pop(context)}, child: const Text('Cancel'))
             ]
           )
@@ -929,9 +931,9 @@ _bip_control() async {
 
 
 
-  final DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
+final DatabaseReference databaseReference = FirebaseDatabase.instance.ref();
   
-  final CollectionReference pitchersCollection = firestore.collection('players');
+final CollectionReference pitchersCollection = firestore.collection('players');
 
 
 void fetchData() {
@@ -969,6 +971,29 @@ Future<Tuple2<List<Player>, List<String>>> fetchPitchers() async {
 
   // print('${pitchers[0].name}, ${pitchers[0].id}');
   return Tuple2<List<Player>, List<String>>(pitchers, pnames);
+}
+
+void updatePitchers(){
+    fetchPitchers().then((tuple) {
+      // Do something with the fetched pitchers
+      _p_pitchers = tuple.item1;
+      setState(() {
+        if(_Pitchers.isEmpty){
+          _Pitchers.addAll(tuple.item2);
+          // print('Adding pitchers');
+          // print(_Pitchers);
+        } else if(_Pitchers != tuple.item2){
+          _p_pitchers = tuple.item1;
+          _Pitchers = tuple.item2;
+        }
+      });
+    }).catchError((error) {
+      // Handle the error
+      print('Error fetching pitchers: $error');
+    });
+    for(String pitcher in _Pitchers){
+      _pitchPlayer.add(Player(pitcher));
+    }
 }
 
 List convertTypesForPitchers(String key, List data){
@@ -1095,6 +1120,7 @@ Player getPitcher(String pitcher){
 //The Program
   @override
   Widget build(BuildContext context) {
+    final dataProvider = Provider.of<DataProvider>(context);
     Size dellySkellys = MediaQuery.of(context).size;
     String dropDownValue = 'Pitcher';
     String dropDownTeam = 'Team';
@@ -1108,42 +1134,42 @@ Player getPitcher(String pitcher){
     {
       'name': 'Export',
       'icon': Icons.import_export,
-      'function': () {_printScreen();},
+      'function': () {_printScreen(); updatePitchers();},
     },
     {
       'name': 'Reset Pitcher',
       'icon': Icons.refresh,
-      'function': () {_resetOption(context);},
+      'function': () {_resetOption(context); updatePitchers();},
     },
     {
       'name': 'Add Game to Pitcher',
       'icon': Icons.add_chart,
-      'function': () {_addGame(context);},
+      'function': () {_addGame(context); updatePitchers();},
     },
     {
       'name': 'Undo Pitch',
       'icon': Icons.undo,
-      'function': () {_undoOption(context);},
+      'function': () {_undoOption(context); updatePitchers();},
     },
     {
-      'name': 'Change Mode: $current_mode',
+      'name': 'Change Mode to ${current_mode == 'Viewing' ? 'Charting' : 'Viewing'}',
       'icon': Icons.mode,
       'function': () {_modeOption(context);},
     },
     {
       'name': 'Reset Count',
       'icon': Icons.numbers,
-      'function': () {_newCount();},
+      'function': () {_newCount(); updatePitchers();},
     },
     {
       'name': 'Add/Remove Pitcher',
       'icon': Icons.settings,
-      'function': () {_pitcherOption();},
+      'function': () {_pitcherOption(); updatePitchers();},
     },
     {
       'name': 'Spray Chart',
       'icon': Icons.compass_calibration_outlined,
-      'function': () {_sprayOption();}
+      'function': () {_sprayOption(); updatePitchers();}
     },
     {
       'name': 'Heat Map',
@@ -1152,30 +1178,9 @@ Player getPitcher(String pitcher){
     },
   ];
 
-
-    // Fetching data
-    fetchPitchers().then((tuple) {
-      // Do something with the fetched pitchers
-      _p_pitchers = tuple.item1;
-      setState(() {
-        if(_Pitchers.isEmpty){
-          _Pitchers.addAll(tuple.item2);
-          // print('Adding pitchers');
-          // print(_Pitchers);
-        } else if(_Pitchers != tuple.item2){
-          _p_pitchers = tuple.item1;
-          _Pitchers = tuple.item2;
-        }
-      });
-    }).catchError((error) {
-      // Handle the error
-      print('Error fetching pitchers: $error');
-    });
-    
-
-    // for(String pitcher in _Pitchers){
-    //   _pitchPlayer.add(Player(pitcher));
-    // }
+  if(_Pitchers.isEmpty){
+    updatePitchers();
+  }
     
 
     _currentPitches = getPitcher(_currentPitcher).displayPitches;
@@ -1196,7 +1201,7 @@ Player getPitcher(String pitcher){
                     image: DecorationImage(image: AssetImage("assets/images/new_Chart.png"),),
                 ),
               ),
-              // Menu Top right
+              // Menu Top left
               Padding(
                 padding: const EdgeInsets.only(top: 18.0),
                 child:
@@ -1291,8 +1296,7 @@ Player getPitcher(String pitcher){
                           _pitcherGamesS.add(game.getDisplayText());
                         }
                       }
-                      
-                      
+                      updatePitchers();
                     });
                   },
                   items: _Pitchers.map((String item) =>
@@ -1335,7 +1339,7 @@ Player getPitcher(String pitcher){
                         _calcCombo(_findPitcher(_currentPitcher).displayPitches);
                         pitchWidget;
                       }
-                      
+                      updatePitchers();
                     });
                   },
                   selectedValues: selected,
@@ -1371,11 +1375,13 @@ Player getPitcher(String pitcher){
               Stack(
                 children: [
                   CustomSingleChildLayout(delegate: DellySkelly(widgetSize: dellySkellys, height: 504, width: 460, off1: (dellySkellys.width / 2) - 395, off2: (dellySkellys.height / 2) - 300),
-                  child:
-                    pitchWidget = PitchWidget(
+                  child: RepaintBoundary(
+                    child: pitchWidget = PitchWidget(
                       key: UniqueKey(),
                       pitches: _currentPitches,
                     )
+                  )
+                    
                   ),
                   CustomSingleChildLayout(delegate: DellySkelly(widgetSize: dellySkellys, height: 504, width: 460, off1: (dellySkellys.width / 2) - 395, off2: (dellySkellys.height / 2) - 300),
                     child:
@@ -1550,6 +1556,7 @@ Player getPitcher(String pitcher){
                                         _cPitchLocations.add(new_pitch.location), 
                                         addPitch(getPitcher(_currentPitcher), new_pitch),
                                         _calcCombo(getPitcher(_currentPitcher).displayPitches),
+                                        updatePitchers(),
                                         Navigator.pop(context)}}, 
                                       child: const Text('Confirm')
                                     ),        

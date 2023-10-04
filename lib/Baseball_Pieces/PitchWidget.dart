@@ -29,24 +29,28 @@ class _PitchWidgetState extends State<PitchWidget> {
   }
 
   Widget buildChartView(){
-    return CustomPaint(
-      painter: paintPitch(widget.pitches, context, current_mode),
-      child: Container(
-        color: Colors.transparent,
-        height: 500,
-        width: 460,
-      ),
+    return RepaintBoundary(
+      child: CustomPaint(
+        painter: paintPitch(widget.pitches, context, current_mode),
+        child: Container(
+          color: Colors.transparent,
+          height: 500,
+          width: 460,
+        ),
+    )
     );
   }
 
   Widget buildHeatMap(){
-    return CustomPaint(
-      painter: paintHeatmap(widget.pitches, context, current_mode),
-      child: Container(
-        color: Colors.transparent,
-        height: 500,
-        width: 460,
-      ),
+    return RepaintBoundary(
+      child: CustomPaint(
+        painter: paintHeatmap(widget.pitches, context),
+        child: Container(
+          color: Colors.transparent,
+          height: 500,
+          width: 460,
+        ),
+      )
     );
   }
 

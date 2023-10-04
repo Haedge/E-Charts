@@ -9,14 +9,13 @@ import 'package:my_app/eCharts.dart';
 class paintHeatmap extends CustomPainter{
   List<Pitch> pitches;
   BuildContext context;
-  String mode;
-  final int divisions;
-  final List<Color> colors;
+  final int gridCols;
+  final int gridRows;
     
-  paintHeatmap(this.pitches, this.context, this.mode,
+  paintHeatmap(this.pitches, this.context,
               {
-               this.divisions = 100, 
-               this.colors = const [Colors.white, Colors.green]
+               this.gridCols = 25,
+               this.gridRows = 25,
               }
   );
 
@@ -26,68 +25,64 @@ class paintHeatmap extends CustomPainter{
     }).toList();
   }
 
-  Color? getColor(List<Color> colors, double density){
-    if (colors == null || colors.isEmpty) {return Colors.transparent;}
-    if (density < 0) {density = 0;} else if(density > 1){density = 1;}
-
-    final double index = density * (colors.length - 1);
-    final int lowerIndex = index.floor();
-    final int upperIndex = index.ceil();
-
-    if(lowerIndex == upperIndex){
-      return colors[lowerIndex].withAlpha(128);
-    } else {
-      final double fraction = index - lowerIndex;
-      final Color lowerColor = colors[lowerIndex];
-      final Color upperColor = colors[upperIndex];
-
-      return Color.lerp(lowerColor, upperColor, fraction)!.withAlpha(128);
-    }
-
-  }
-    
-
 
   @override
   void paint(Canvas canvas, Size size) {
+    print('Painting heatmap');
+    const int maxDensity = 2;
+    final binWidth = size.width / gridCols;
+    final binHeight = size.height / gridRows;
 
-
-    const int maxDensity = 20;
-    const List<Color> intensityColors = [
-      Colors.blue,
-      Colors.green,
-      Colors.yellow,
-      Colors.orange,
-      Colors.red
-    ];
+    final binDensities = List.generate(gridCols * gridRows, (_) => 0);
 
     List<Offset> points = getLocs(pitches);
 
+    for(final point in points){
+      final col = (point.dx / size.width * gridCols).floor();
+      final row = (point.dy / size.height * gridRows).floor();
+      final binIndex = row * gridCols + col;
 
 
-      for (final point in points){
-        final density = calculateDensity(point, points, size);
+      binDensities[binIndex]++;
+    }
 
-        final colorIndex = (density / maxDensity * (intensityColors.length - 1)).round();
-        final color = intensityColors[colorIndex];
+    for(int row = 0; row < gridRows; row++){
+      for(int col = 0; col < gridCols; col++){
+        final binIndex = row * gridCols + col;
+        final density = binDensities[binIndex];
+
+        final color = lerpColors(Colors.blue, Colors.red, density / maxDensity);
+
+        final left = col * binWidth;
+        final top = row * binHeight;
+        final right = left + binWidth;
+        final bottom = top + binHeight;
+
+        final rect = Rect.fromLTRB(left, top, right, bottom);
 
         final paint = Paint()
           ..color = color
           ..style = PaintingStyle.fill;
-        
-        canvas.drawCircle(point, 7.5, paint);
 
+        canvas.drawRect(rect, paint);
       }
     }
-
-  double calculateDensity(Offset point, List<Offset> allPoints, Size size){
-    const radius = 50.0;
-    final nearbyPoints = allPoints.where((p) => (p - point).distanceSquared <= radius * radius).toList();
-    return nearbyPoints.length.toDouble();
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate){
-    return true;
+  Color lerpColors(Color a, Color b, double t){
+    return Color.lerp(a, b, t)!.withAlpha(150);
   }
-}
+    // @override
+    // bool shouldRepaint(covariant CustomPainter oldDelegate){
+    //   return true;
+    // }
+
+    @override
+    bool shouldRepaint(covariant CustomPainter oldDelegate) {
+      final oldData = (oldDelegate as paintHeatmap).pitches;
+      final newData = pitches;
+
+      // Only repaint if the data has changed.
+      return oldData != newData;
+    }
+  }

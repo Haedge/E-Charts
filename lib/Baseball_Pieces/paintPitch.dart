@@ -13,6 +13,7 @@ class paintPitch extends CustomPainter{
 
   @override
   void paint(Canvas canvas, Size size){
+    print('Paint Pitch');
     Canvas myCanvas = canvas;
 
     // Clear the canvas
@@ -80,7 +81,16 @@ class paintPitch extends CustomPainter{
   }
 
 
-  @override
-  bool shouldRepaint(paintPitch oldDelegate) => true;
+  // @override
+  // bool shouldRepaint(paintPitch oldDelegate) => true;
+
+    @override
+    bool shouldRepaint(covariant CustomPainter oldDelegate) {
+      final oldData = (oldDelegate as paintPitch).pitches;
+      final newData = pitches;
+
+      // Only repaint if the data has changed.
+      return oldData != newData;
+    }
     
 }
