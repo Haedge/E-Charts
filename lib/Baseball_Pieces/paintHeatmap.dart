@@ -14,8 +14,8 @@ class paintHeatmap extends CustomPainter{
     
   paintHeatmap(this.pitches, this.context,
               {
-               this.gridCols = 25,
-               this.gridRows = 25,
+               this.gridCols = 100,
+               this.gridRows = 100,
               }
   );
 
@@ -29,21 +29,32 @@ class paintHeatmap extends CustomPainter{
   @override
   void paint(Canvas canvas, Size size) {
     print('Painting heatmap');
-    const int maxDensity = 2;
+    List<Offset> points = getLocs(pitches);
+    final double maxDensity = points.isEmpty ? 10 : points.length % 10 != 0 ? points.length % 10 : points.length / 10;
     final binWidth = size.width / gridCols;
     final binHeight = size.height / gridRows;
 
-    final binDensities = List.generate(gridCols * gridRows, (_) => 0);
-
-    List<Offset> points = getLocs(pitches);
+    final binDensities = List.generate(gridCols * gridRows, (_) => 0.0);
 
     for(final point in points){
-      final col = (point.dx / size.width * gridCols).floor();
-      final row = (point.dy / size.height * gridRows).floor();
-      final binIndex = row * gridCols + col;
+      final centerX = point.dx;
+      final centerY = point.dy;
 
+      for(int row = 0; row < gridRows; row++){
+        for(int col = 0; col < gridCols; col++){
+          final binIndex = row * gridCols + col;
 
-      binDensities[binIndex]++;
+          final binCenterX = col * binWidth + binWidth / 2;
+          final binCenterY = row * binHeight + binHeight / 2;
+
+          final distance = Offset(binCenterX - centerX, binCenterY - centerY).distance;
+
+          final intensity = calculateIntensity(distance);
+
+          binDensities[binIndex] += intensity;
+
+        }
+      }
     }
 
     for(int row = 0; row < gridRows; row++){
@@ -67,6 +78,14 @@ class paintHeatmap extends CustomPainter{
         canvas.drawRect(rect, paint);
       }
     }
+
+  }
+
+  double calculateIntensity(double distance){
+    const sigma = 10.0;
+    // return 1.0 * (1.0 / (2.0 * pi * sigma * sigma)) * exp(-distance * distance / (2.0 * sigma * sigma));
+    final intensity = exp(-distance * distance / (2.0 * sigma * sigma));
+    return intensity * 8;
   }
 
   Color lerpColors(Color a, Color b, double t){
