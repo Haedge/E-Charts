@@ -11,11 +11,15 @@ class paintHeatmap extends CustomPainter{
   BuildContext context;
   final int gridCols;
   final int gridRows;
+  final List<MaterialColor> gradientColors;
+  final List<double> intensityRanges;
     
   paintHeatmap(this.pitches, this.context,
               {
                this.gridCols = 100,
                this.gridRows = 100,
+               this.gradientColors = const [Colors.blue, Colors.yellow, Colors.red],
+               this.intensityRanges = const [0, 0.2, 0.6, 1],
               }
   );
 
@@ -25,12 +29,20 @@ class paintHeatmap extends CustomPainter{
     }).toList();
   }
 
+  Color getColorForDensity(double intensity){
+    final colors = gradientColors;
+    final ranges = intensityRanges;
+
+    return Colors.transparent;
+
+  }
+
 
   @override
   void paint(Canvas canvas, Size size) {
     print('Painting heatmap');
     List<Offset> points = getLocs(pitches);
-    final double maxDensity = points.isEmpty ? 10 : points.length % 10 != 0 ? points.length % 10 : points.length / 10;
+    final double maxDensity = points.isEmpty ? 10 : points.length % 10 != 0 || points.length < 10 ? points.length % 10 : points.length / 10;
     final binWidth = size.width / gridCols;
     final binHeight = size.height / gridRows;
 

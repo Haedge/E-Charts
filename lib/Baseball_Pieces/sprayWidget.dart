@@ -71,7 +71,7 @@ class MasterPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size){
     for(Pitch pitch in pitches){
-      if(pitch.hdesc != null){
+      if(pitch.hdesc != Hit(' ', const Offset(0,0), ' ')){
           var desc = pitch.hdesc;
           double adjlocx = desc.location.dx * (300 / 400);
           double adjlocy = desc.location.dy * (300 / 400);

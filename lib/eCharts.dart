@@ -154,7 +154,7 @@ class eCharts extends State<HomePage> {
   TextEditingController _yrText = TextEditingController();
   String _currentTeam = " ";
   final List<String> _Teams = [' ', 'Belhaven', 'Berry','BSC', 'CBC', 'Centre', 'Dallas', 'Depauw', 'Millsaps', 'Nebraska', 'Oglethorpe', 'Ozarks', 'Rhodes',
-                                'St Thomas','Scrimmage','Sewanee', 'Bullpen', 'Fall WS', 'OBU', 'Wash U'];
+                                'St Thomas','Scrimmage','Sewanee', 'Bullpen', 'Fall WS', 'OBU', 'Wash U', 'PCH'];
   List<bool> isPType = List.filled(4, false);
   List<bool> isPAction = List.filled(8, false);
 
@@ -580,7 +580,7 @@ class eCharts extends State<HomePage> {
                   ),
                   Text("\u2022 Count Thrown in: ${pitch.oldCount}"),
 
-                  if(updateData)
+                  if(updateData && pitch.hdesc != Hit(' ', const Offset(0,0), ' '))
                     sprayWidget(locs: [pitch]),
 
                 ],
@@ -787,6 +787,7 @@ class eCharts extends State<HomePage> {
             children: [
               ElevatedButton(onPressed: () => {
                 undoPitchDB(getPitcher(_currentPitcher)),
+                updatePitchers(),
                 Navigator.pop(context)}, child: const Text('Confirm')),
               ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel'))
             ]
@@ -1287,6 +1288,8 @@ Player getPitcher(String pitcher){
                       _pitcherGamesG = p.games.isEmpty ? [] : 
                                         p.games;
                       
+                      selected = [];
+                      
 
                       // TODO: Here is the start for the certain selections
                       _pitcherGamesS = ['FB', 'CB', 'CH', 'SL', 'Strike', 'Ball'];
@@ -1389,7 +1392,7 @@ Player getPitcher(String pitcher){
                         child: DottedBorder(
                           color: Colors.black,
                           dashPattern: const [1, 3],
-                          strokeWidth: 4,
+                          strokeWidth: 1,
                             child: Container(
                               color: Colors.transparent,
                               height: 500,
