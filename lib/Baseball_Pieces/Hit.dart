@@ -33,4 +33,16 @@ class Hit {
     };
   }
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Hit &&
+          ball_path == other.ball_path &&
+          location == other.location &&
+          result == other.result;
+
+  @override
+  int get hashCode =>
+      ball_path.hashCode ^ location.hashCode ^ result.hashCode;
+
 }
