@@ -88,6 +88,7 @@ class eCharts extends State<HomePage> {
   String month = DateTime.now().month.toString();
   String day = DateTime.now().day.toString();
   String year = DateTime.now().year.toString();
+  int treset = 0;
 
   final List<String> pitchChoices = ['FB', 'CH', 'CB', 'SL'];
 
@@ -195,6 +196,8 @@ class eCharts extends State<HomePage> {
 
   _newCount(){
     current_count = const Tuple2<int,int> (0,0);
+    treset = 1;
+    updatePitchers();
     setState(() {});
   }
 
@@ -224,7 +227,7 @@ class eCharts extends State<HomePage> {
       current_mode = "Viewing";
       modeColor = Colors.redAccent;
       await playerRef.update({
-        'displayPitches': p.total_staple.map((e) => e.toJson()),
+        'displayPitches': [...p.total_staple.map((e) => e.toJson()), ...p.unsaved_pitches.map((e) => e.toJson())]
       });
       selected = [];
       // print('Current pitch number CtV: ${_currentPitches.length}');
@@ -262,11 +265,17 @@ class eCharts extends State<HomePage> {
     p_pitcher.addGame(game);
     p_pitcher.unsaved_pitches = [];
     p_pitcher.displayPitches = [];
+    List<Map<String, dynamic>> plist = [];
+
+    for(Pitch pitch in game.pitches){
+      plist.add(pitch.toJson());
+    }
 
     final DocumentReference playerRef = FirebaseFirestore.instance.collection('players').doc(p_pitcher.id);
     await playerRef.update({
       'unsaved_pitches': [],
       'displayPitches': [],
+      'total_staple': FieldValue.arrayUnion(plist),
       'games' : FieldValue.arrayUnion([game.toJson()]),
     });
   }
@@ -408,30 +417,33 @@ class eCharts extends State<HomePage> {
   _calculateCount(Pitch prev_pitch){
     current_count = const Tuple2<int,int> (0,0);
 
-    var oldC = prev_pitch.oldCount;
+    if(treset != 1){
+    
+      var oldC = prev_pitch.oldCount;
 
-    current_count = oldC;
+      current_count = oldC;
 
-    if(prev_pitch.hit || prev_pitch.bip){
-      current_count = const Tuple2<int,int> (0,0);
-    } else if(prev_pitch.bb || prev_pitch.hbp || prev_pitch.k_looking || prev_pitch.k_swinging){
-      current_count = const Tuple2<int,int> (0,0);
-    } else {
-      if(prev_pitch.strike){
-        if(oldC.item2 != 2){
-          current_count = Tuple2<int,int> (oldC.item1, oldC.item2 + 1);
+      if(prev_pitch.hit || prev_pitch.bip){
+        current_count = const Tuple2<int,int> (0,0);
+      } else if(prev_pitch.bb || prev_pitch.hbp || prev_pitch.k_looking || prev_pitch.k_swinging){
+        current_count = const Tuple2<int,int> (0,0);
+      } else {
+        if(prev_pitch.strike){
+          if(oldC.item2 != 2){
+            current_count = Tuple2<int,int> (oldC.item1, oldC.item2 + 1);
+          } else {
+            if(!prev_pitch.foul){
+              current_count = const Tuple2<int,int> (0,0);
+            }
+          }
         } else {
-          if(!prev_pitch.foul){
+          if(oldC.item1 != 3){
+            current_count = Tuple2<int,int> (oldC.item1 + 1, oldC.item2);
+          } else {
             current_count = const Tuple2<int,int> (0,0);
           }
         }
-      } else {
-        if(oldC.item1 != 3){
-          current_count = Tuple2<int,int> (oldC.item1 + 1, oldC.item2);
-        } else {
-          current_count = const Tuple2<int,int> (0,0);
-        }
-      }
+    }
 
 
     }
@@ -1049,8 +1061,8 @@ void addPitch(Player pitcher, Pitch pitch) async {
   await playerRef.update({
     'unsaved_pitches': FieldValue.arrayUnion([pitch.toJson()]),
     'displayPitches': FieldValue.arrayUnion([pitch.toJson()]),
-    'total_staple': FieldValue.arrayUnion([pitch.toJson()])
   });
+  _calcCombo(getPitcher(_currentPitcher).displayPitches);
 }
 
 List<Pitch> convertToPitch(List<dynamic> pitches){
@@ -1559,7 +1571,7 @@ Player getPitcher(String pitcher){
                                         _cPitchLocations.add(new_pitch.location), 
                                         addPitch(getPitcher(_currentPitcher), new_pitch),
                                         _calcCombo(getPitcher(_currentPitcher).displayPitches),
-                                        updatePitchers(),
+                                        updatePitchers(), treset = 0,
                                         Navigator.pop(context)}}, 
                                       child: const Text('Confirm')
                                     ),        
