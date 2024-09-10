@@ -155,7 +155,8 @@ class eCharts extends State<HomePage> {
   TextEditingController _yrText = TextEditingController();
   String _currentTeam = " ";
   final List<String> _Teams = [' ', 'Belhaven', 'Berry','BSC', 'CBC', 'Centre', 'Dallas', 'Depauw', 'Millsaps', 'Nebraska', 'Oglethorpe', 'Ozarks', 'Rhodes',
-                                'St Thomas','Scrimmage','Sewanee', 'Bullpen', 'Fall WS', 'OBU', 'Wash U', 'PCH'];
+                                'St Thomas','Scrimmage','Sewanee', 'Bullpen', 'Fall WS', 'OBU', 'Wash U', 'PCH', 'Westminster', 'Centenary',
+                                'Dominican', 'Millikin', 'Lyon', 'ETBU', 'Grinnell'];
   List<bool> isPType = List.filled(4, false);
   List<bool> isPAction = List.filled(8, false);
 
@@ -278,6 +279,7 @@ class eCharts extends State<HomePage> {
       'total_staple': FieldValue.arrayUnion(plist),
       'games' : FieldValue.arrayUnion([game.toJson()]),
     });
+    updatePitchers();
   }
 
   _addGame(BuildContext context){

@@ -4,7 +4,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:my_app/Baseball_Pieces/Pitch.dart';
-import 'package:my_app/eCharts.dart';
 
 class paintHeatmap extends CustomPainter{
   List<Pitch> pitches;
@@ -30,8 +29,8 @@ class paintHeatmap extends CustomPainter{
   }
 
   Color getColorForDensity(double intensity){
-    final colors = gradientColors;
-    final ranges = intensityRanges;
+    // final colors = gradientColors;
+    // final ranges = intensityRanges;
 
     return Colors.transparent;
 

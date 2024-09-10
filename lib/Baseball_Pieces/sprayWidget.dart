@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/Baseball_Pieces/Pitch.dart';
-import 'package:my_app/DellySkelly.dart';
-import 'package:my_app/eCharts.dart';
+// import 'package:my_app/DellySkelly.dart';
+// import 'package:my_app/eCharts.dart';
 import 'package:my_app/Baseball_Pieces/Hit.dart';
 import 'dart:ui';
-import 'package:dashed_line/dashed_line.dart';
+// import 'package:dashed_line/dashed_line.dart';
 import 'dart:math' as math;
 
 class sprayWidget extends StatefulWidget {
   List<Pitch> locs;
 
-  sprayWidget({required this.locs});
+  sprayWidget({Key? key, required this.locs}) : super(key: key);
 
   @override
   _sprayWidgetState createState() => _sprayWidgetState();
@@ -21,7 +21,7 @@ class _sprayWidgetState extends State<sprayWidget>{
   Widget build(BuildContext context) {
     
     Offset startPoint = const Offset(186, 227);
-    Size dellySkellyH = const Size(500, 50);
+    // Size dellySkellyH = const Size(500, 50);
     Text info = widget.locs.length == 1 ? Text('${widget.locs[0].hdesc.ball_path}, ${widget.locs[0].hdesc.result}') : 
                 const Text('Spray Chart');
 
