@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 import 'Hit.dart';
+import 'dart:convert';
 
 class Pitch{
   String type = "";
@@ -127,6 +128,41 @@ class Pitch{
       Offset(json['loc_x'], json['loc_y']),
       Tuple2(json['oldCountBalls'], json['oldCountStrikes']),
       json['hdesc'] != null ? Hit.fromJson(json['hdesc']) : def_hdesc,
+    );
+  }
+
+  Map<String, dynamic> toFlite(){
+    return {
+      'type': type,
+      'spd': speed,
+      'strike': strike ? 1 : 0,
+      'swing': swing ? 1 : 0,
+      'hit': hit ? 1 : 0,
+      'k_looking': k_looking ? 1 : 0,
+      'k_swinging': k_swinging ? 1 : 0,
+      'hbp': hbp ? 1 : 0,
+      'bb': bb ? 1 : 0,
+      'in_zone': in_zone ? 1 : 0,
+      'foul': foul ? 1 : 0,
+      'bip': bip ? 1 : 0,
+      'loc': jsonEncode({'dx': location.dx, 'dy': location.dy}),
+      'old_count': jsonEncode({'balls': oldCount.item1, 'strikes': oldCount.item2}),
+      'hdesc': hdesc.toFlite()
+    };
+    }
+  
+  factory Pitch.fromFlite(Map<String, dynamic> info){
+    Map<String, dynamic> loc_info = jsonDecode(info['loc']);
+    Map<String, dynamic> oldCount_info = jsonDecode(info['old_count']);
+    return Pitch(
+      info['type'], info['spd'],
+      info['strike'] == 1, info['swing'] == 1, info['hit'] == 1,
+      info['k_looking'] == 1, info['k_swinging'] == 1, info['hbp'] == 1,
+      info['bb'] == 1, info['in_zone'] == 1, info['foul'] == 1,
+      info['bip'] == 1,
+      Offset(double.parse(loc_info['dx']), double.parse(loc_info['dy'])),
+      Tuple2(int.parse(oldCount_info['balls']), int.parse(oldCount_info['strikes'])),
+      Hit.fromFlite(jsonDecode(info['hdesc']))
     );
   }
 

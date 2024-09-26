@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 
@@ -25,6 +27,23 @@ class Hit {
       'loc_y': location.dy,
       'result': result
     };
+  }
+
+  Map<String,dynamic> toFlite(){
+    return{
+      'ball_path': ball_path,
+      'loc': jsonEncode({'dx': location.dx, 'dy': location.dy}),
+      'result': result
+    };
+  }
+
+  factory Hit.fromFlite(Map<String, dynamic> map){
+    Map<String,dynamic> locInfo = jsonDecode(map['loc']);
+    return Hit(
+      map['ball_path'],
+      Offset(double.parse(locInfo['dx']), double.parse(locInfo['dy'])),
+      map['result']
+    );
   }
 
   @override
