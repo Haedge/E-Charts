@@ -28,9 +28,9 @@ import 'DellySkelly.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'Baseball_Pieces/HittingWidget.dart';
 
-import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_core/firebase_core.dart';
 import 'dataProvider.dart';
-import 'firebase_options.dart';
+// import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
